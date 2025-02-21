@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
+
 
 class Settings:
     API_BASE_URL = "https://swapi.teamontherun.com"
@@ -12,22 +13,29 @@ class Settings:
     SCOPE = "processes provisioning"
     MSISDN = "13142014658"
 
+
 class TokenRequest(BaseModel):
     token_type: str
     scope: str
 
+
 class TokenResponse(BaseModel):
     access_token: str
+
 
 class ProcessTemplateResponse(BaseModel):
     template: Dict[str, Any]
 
+
 class CreateProcessRequest(BaseModel):
     msisdn: str
     template_id: str
+    ticket_id: str
+
 
 class ProcessRequest(BaseModel):
     template_id: str
+    ticket_id: str
     pickup_time: Optional[datetime] = None
     drop_time: Optional[datetime] = None
     trip_start_time: Optional[datetime] = None

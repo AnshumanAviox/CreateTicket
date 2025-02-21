@@ -1,7 +1,6 @@
 # api_endpoints.py
 from auth import token_manager, get_access_token, clear_token_cache
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List
 import json
 import requests
 from models import (
@@ -10,7 +9,6 @@ from models import (
     ProcessRequest,
     Settings
 )
-from auth import get_access_token
 from templates import get_template_content, populate_values_and_update_template_by_name
 
 settings = Settings()
@@ -25,16 +23,20 @@ async def get_template(
     template = await get_template_content(access_token, template_id)
     return {"template": template}
 
-
 @router.get("/get-token")
 async def get_token():
     """Get access token for testing"""
     try:
         token = await get_access_token()
+        token_expiry = (
+            token_manager.token_expiry.isoformat() 
+            if token_manager.token_expiry 
+            else None
+        )
         return {
             "access_token": token,
             "cached": bool(token_manager.cached_token),
-            "expires_at": token_manager.token_expiry.isoformat() if token_manager.token_expiry else None
+            "expires_at": token_expiry
         }
     except Exception as e:
         return {"error": str(e)}
@@ -44,10 +46,15 @@ async def refresh_token():
     """Force refresh the access token"""
     clear_token_cache()
     token = await get_access_token()
+    token_expiry = (
+        token_manager.token_expiry.isoformat() 
+        if token_manager.token_expiry 
+        else None
+    )
     return {
         "message": "Token refreshed",
         "access_token": token,
-        "expires_at": token_manager.token_expiry.isoformat() if token_manager.token_expiry else None
+        "expires_at": token_expiry
     }
 
 @router.post("/process/create")
@@ -60,7 +67,7 @@ async def create_process(
     values = populate_values_and_update_template_by_name(template_content)
     
     metadata = {
-        "Label": "Ticket 1234",
+        "Label": f"Ticket {request.ticket_id}",
         "Priority": 2,
         "TemplateId": request.template_id,
         "TemplateLabel": "Test Process",
@@ -84,7 +91,10 @@ async def create_process_with_data(
     access_token: str = Depends(get_access_token)
 ):
     """Create process with provided data"""
-    template_content = await get_template_content(access_token, process_data.template_id)
+    template_content = await get_template_content(
+        access_token, 
+        process_data.template_id
+    )
     values = populate_values_and_update_template_by_name(
         template_content,
         pickup_time=process_data.pickup_time,
@@ -108,7 +118,7 @@ async def create_process_with_data(
     )
     
     metadata = {
-        "Label": "Ticket 1234",
+        "Label": f"Ticket {process_data.ticket_id}",
         "Priority": 2,
         "TemplateId": process_data.template_id,
         "TemplateLabel": "Test Process",
@@ -124,7 +134,11 @@ async def create_process_with_data(
         "UseRawValues": True
     }
     
-    return await create_process_request(access_token, settings.MSISDN, payload)
+    return await create_process_request(
+        access_token, 
+        settings.MSISDN, 
+        payload
+    )
 
 async def create_process_request(access_token: str, msisdn: str, payload: dict):
     """Send process creation request"""
