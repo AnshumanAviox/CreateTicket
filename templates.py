@@ -71,7 +71,35 @@ def extract_json_content(api_response: Dict) -> Dict:
 
 def populate_values_and_update_template_by_name(
     template: Dict,
+    customer: Optional[str] = None,
+    contact_info: Optional[str] = None,
     pickup_time: Optional[datetime] = None,
+    pickup_address: Optional[str] = None,
+    pickup_city: Optional[str] = None,
+    pickup_state: Optional[str] = None,
+    pickup_zip: Optional[str] = None,
+    drop_company: Optional[str] = None,
+    drop_contact: Optional[str] = None,
+    drop_address: Optional[str] = None,
+    drop_city: Optional[str] = None,
+    drop_state: Optional[str] = None,
+    drop_zip: Optional[str] = None,
+    ticket_details: Optional[str] = None,
+    notes: Optional[str] = None,
+    from_company: Optional[str] = None,
+    from_contact: Optional[str] = None,
+    from_address: Optional[str] = None,
+    from_city: Optional[str] = None,
+    from_state: Optional[str] = None,
+    from_zip: Optional[str] = None,
+    from_phone: Optional[str] = None,
+    to_company: Optional[str] = None,
+    to_contact: Optional[str] = None,
+    to_address: Optional[str] = None,
+    to_city: Optional[str] = None,
+    to_state: Optional[str] = None,
+    to_zip: Optional[str] = None,
+    to_phone: Optional[str] = None,
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
     trip_end_time: Optional[datetime] = None,
@@ -93,26 +121,90 @@ def populate_values_and_update_template_by_name(
     drop_photo: Optional[List[str]] = None,
     pickup_photo: Optional[List[str]] = None
 ) -> Dict:
-    """
-    Populate values for the fields in the template based on their name
-    and update the default values in the template.
-    """
+    """Populate values for the fields in the template"""
     values = {}
-
-    if "label" in template:
-        template["label"] = "Ticket 1234"
-
+    
     for block in template.get("blocks", []):
         for field in block.get("fields", []):
             field_name = field.get("friendlyName")
             field_type = field.get("type")
+            field_uuid = field.get("uuid")
 
-            # Handle Customer and Contact Info fields
-            if field_name in ["Customer", "Contact Info"] and field_type == "text":
-                field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
+            # Handle Customer field
+            if field_name == "Customer" and field_type == "text":
+                values[field_uuid] = customer or ""
+                field["defaultValue"] = customer or ""
+                field["unsupportedTypeValue"] = customer or ""
+
+            # Handle Contact Info field
+            elif field_name == "Contact Info" and field_type == "text":
+                values[field_uuid] = contact_info or ""
+                field["defaultValue"] = contact_info or ""
+                field["unsupportedTypeValue"] = contact_info or ""
+
+            # Handle Pickup Address
+            elif field_name == "Pickup Address" and field_type == "address":
+                address_value = {
+                    "address": pickup_address or "",
+                    "city": pickup_city or "",
+                    "state": pickup_state or "",
+                    "zip": pickup_zip or ""
+                }
+                values[field_uuid] = address_value
+                field["unsupportedTypeValue"] = address_value
+
+            # Handle Drop Company
+            elif field_name == "Drop Company" and field_type == "text":
+                values[field_uuid] = drop_company or ""
+                field["defaultValue"] = drop_company or ""
+                field["unsupportedTypeValue"] = drop_company or ""
+
+            # Handle Drop Contact
+            elif field_name == "Drop Contact" and field_type == "text":
+                values[field_uuid] = drop_contact or ""
+                field["defaultValue"] = drop_contact or ""
+                field["unsupportedTypeValue"] = drop_contact or ""
+
+            # Handle Drop Address
+            elif field_name == "Drop Address" and field_type == "address":
+                address_value = {
+                    "address": drop_address or "",
+                    "city": drop_city or "",
+                    "state": drop_state or "",
+                    "zip": drop_zip or ""
+                }
+                values[field_uuid] = address_value
+                field["unsupportedTypeValue"] = address_value
+
+            # Handle Ticket Details
+            elif field_name == "Ticket Details" and field_type == "textarea":
+                values[field_uuid] = ticket_details or ""
+                field["defaultValue"] = ticket_details or ""
+                field["unsupportedTypeValue"] = ticket_details or ""
+
+            # Handle From Company field
+            elif field_name == "From Company" and field_type == "text":
+                values[field_uuid] = from_company or ""
+                field["defaultValue"] = from_company or ""
+                field["unsupportedTypeValue"] = from_company or ""
+
+            # Handle From Contact field
+            elif field_name == "From Contact" and field_type == "text":
+                values[field_uuid] = from_contact or ""
+                field["defaultValue"] = from_contact or ""
+                field["unsupportedTypeValue"] = from_contact or ""
+
+            # Handle From Address fields
+            elif field_name == "From Address" and field_type == "address":
+                address_value = {
+                    "address": from_address or "",
+                    "city": from_city or "",
+                    "state": from_state or "",
+                    "zip": from_zip or "",
+                    "phone": from_phone or ""
+                }
+                values[field_uuid] = address_value
+                field["unsupportedTypeValue"] = address_value
 
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
@@ -158,13 +250,6 @@ def populate_values_and_update_template_by_name(
             elif field_name == "Separator" and field_type == "separator":
                 field_uuid = field["uuid"]
 
-            # Handle Drop Company and Contact
-            elif field_name in ["Drop Company", "Drop Contact"] and field_type == "text":
-                field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
-
             # Handle Drop Time
             elif field_name.strip().lower() == "drop time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
@@ -186,12 +271,11 @@ def populate_values_and_update_template_by_name(
                     field["unsupportedTypeValue"] = empty_time
                     field["hasValue"] = False
 
-            # Handle Notes and Ticket Details
-            elif field_name in ["Notes", "Ticket Details"] and field_type == "textarea":
-                field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
+            # Handle Notes field
+            elif field_name == "Notes" and field_type == "textarea":
+                values[field_uuid] = notes or ""
+                field["defaultValue"] = notes or ""
+                field["unsupportedTypeValue"] = notes or ""
 
             # Handle Signature
             elif field_name == "Signature" and field_type == "signature":

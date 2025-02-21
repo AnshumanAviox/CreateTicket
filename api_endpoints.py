@@ -10,6 +10,9 @@ from models import (
     Settings
 )
 from templates import get_template_content, populate_values_and_update_template_by_name
+from sqlalchemy.orm import Session
+from db.database import get_db
+from db.models import InvoiceTable
 
 settings = Settings()
 router = APIRouter()
@@ -57,14 +60,77 @@ async def refresh_token():
         "expires_at": token_expiry
     }
 
+async def get_ticket_data(ticket_id: str, db: Session):
+    """Get ticket data from database"""
+    try:
+        ticket = db.query(InvoiceTable).filter(InvoiceTable.Ticket_ID == ticket_id).first()
+        if ticket:
+            # Format contact information
+            from_contact_info = f"{ticket.From_Contact} - {ticket.From_Phone}" if ticket.From_Contact and ticket.From_Phone else (ticket.From_Contact or ticket.From_Phone or "")
+            to_contact_info = f"{ticket.To_Contact} - {ticket.To_Phone}" if ticket.To_Contact and ticket.To_Phone else (ticket.To_Contact or ticket.To_Phone or "")
+            
+            # Format addresses
+            from_address = " ".join(filter(None, [ticket.From_Address_1, ticket.From_Address_2]))
+            to_address = " ".join(filter(None, [ticket.To_Address_1, ticket.To_Address_2]))
+            
+            # Format ticket details
+            ticket_details = "\n".join(filter(None, [
+                f"Vehicle Type: {ticket.Vehicle_Type}" if ticket.Vehicle_Type else None,
+                f"PO: {ticket.PO}" if ticket.PO else None,
+                f"Pieces: {ticket.Pieces}" if ticket.Pieces else None,
+                f"Skids: {ticket.Skids}" if ticket.Skids else None,
+                f"Weight: {ticket.Weight}" if ticket.Weight else None,
+                f"COD: ${ticket.COD}" if ticket.COD else None,
+                f"\nNotes: {ticket.Notes}" if ticket.Notes else None
+            ]))
+            
+            # Add formatted fields to ticket object
+            ticket.formatted_from_contact = from_contact_info
+            ticket.formatted_to_contact = to_contact_info
+            ticket.formatted_from_address = from_address
+            ticket.formatted_to_address = to_address
+            ticket.formatted_ticket_details = ticket_details
+            
+        return ticket
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+
 @router.post("/process/create")
 async def create_process(
     request: CreateProcessRequest,
+    db: Session = Depends(get_db),
     access_token: str = Depends(get_access_token)
 ):
-    """Create empty process from template"""
+    """Create process from template, populated with ticket data if available"""
+    # Get ticket data if it exists
+    ticket_data = await get_ticket_data(request.ticket_id, db)
     template_content = await get_template_content(access_token, request.template_id)
-    values = populate_values_and_update_template_by_name(template_content)
+    
+    if ticket_data:
+        # Populate template with existing ticket data
+        values = populate_values_and_update_template_by_name(
+            template_content,
+            customer=ticket_data.From_Company,
+            contact_info=ticket_data.formatted_from_contact,
+            pickup_time=ticket_data.Pickup_Date,
+            pickup_address=ticket_data.formatted_from_address,
+            pickup_city=ticket_data.From_City,
+            pickup_state=ticket_data.From_State,
+            pickup_zip=ticket_data.From_Zip,
+            drop_company=ticket_data.To_Company,
+            drop_contact=ticket_data.formatted_to_contact,
+            drop_address=ticket_data.formatted_to_address,
+            drop_city=ticket_data.To_City,
+            drop_state=ticket_data.To_State,
+            drop_zip=ticket_data.To_Zip,
+            ticket_details=ticket_data.formatted_ticket_details
+        )
+    else:
+        # Create empty template if no ticket data exists
+        values = populate_values_and_update_template_by_name(template_content)
     
     metadata = {
         "Label": f"Ticket {request.ticket_id}",

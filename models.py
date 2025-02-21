@@ -1,17 +1,22 @@
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from typing import Dict, Any, Optional
 from datetime import datetime
 
 
-class Settings:
-    API_BASE_URL = "https://swapi.teamontherun.com"
-    CLIENT_ID = "31343_43lzb3vngtmokww8wcws48w4oss044s044o4gkcocks4s0k44c"
-    CLIENT_SECRET = "64po82nnwssosgo80wo88osok4so8kc4s8cgowkcsgc80wcoss"
-    USERNAME = "bradleycooper888@gmail.com"
-    PASSWORD = "Not4afish1234!"
-    TOKEN_TYPE = "sw_organization_all_data"
-    SCOPE = "processes provisioning"
-    MSISDN = "13142014658"
+class Settings(BaseSettings):
+    API_BASE_URL: str = "https://swapi.teamontherun.com"
+    TOKEN_TYPE: str = "sw_organization_all_data"
+    CLIENT_ID: str = "31343_43lzb3vngtmokww8wcws48w4oss044s044o4gkcocks4s0k44c"
+    CLIENT_SECRET: str = "64po82nnwssosgo80wo88osok4so8kc4s8cgowkcsgc80wcoss"
+    USERNAME: str = "bradleycooper888@gmail.com"
+    PASSWORD: str = "Not4afish1234!"
+    SCOPE: str = "processes provisioning"
+    MSISDN: str = "13142014658"
+    DATABASE_URL: str = "mssql+pyodbc://chiliadmin:h77pc0l0@172.31.6.34:1433/CHILI_PROD?driver=ODBC+Driver+17+for+SQL+Server"
+
+    class Config:
+        env_file = ".env"
 
 
 class TokenRequest(BaseModel):
