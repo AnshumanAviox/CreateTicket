@@ -114,8 +114,8 @@ def populate_values_and_update_template_by_name(
             if field_name in ["Customer"] and field_type == "text":
                 field_uuid = field["uuid"]
                 values[field_uuid] = ""
-                field["defaultValue"] = "New John"
-                field["unsupportedTypeValue"] = "New John"
+                field["defaultValue"] = ticket_data.get('From_Company', ''),
+                field["unsupportedTypeValue"] = ticket_data.get('From_Company','')
 
             elif field_name in ["Contact Info"] and field_type == "text":
                 field_uuid = field["uuid"]
