@@ -133,25 +133,25 @@ def populate_values_and_update_template_by_name(
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
-                # if pickup_time:
+                if pickup_time:
                 #     formatted_time = {
                 #         "date": "02/04/2025",
                 #         "time": "10:45 AM",
                 #         "tzd": "UTC"
                 #     }
                 # values[field_uuid] = formatted_time
-                field_value = ticket_data.get('Pickup_Date', '')
-                # print(field_value,"09090909990909009090909090")
-                field["value"] = field_value
-                field["defaultValue"] = field_value
-                field["unsupportedTypeValue"] = field_value
-                # field["hasValue"] = True
-                # else:
-                #     empty_time = {"date": "", "time": "", "tzd": ""}
-                #     field["value"] = empty_time
-                #     field["defaultValue"] = empty_time
-                #     field["unsupportedTypeValue"] = empty_time
-                #     field["hasValue"] = False
+                    field_value = ticket_data.get('Pickup_Date', '')
+                    # print(field_value,"09090909990909009090909090")
+                    field["value"] = field_value
+                    field["defaultValue"] = field_value
+                    field["unsupportedTypeValue"] = field_value
+                    field["hasValue"] = True
+                else:
+                    empty_time = {"date": "", "time": "", "tzd": ""}
+                    field["value"] = empty_time
+                    field["defaultValue"] = empty_time
+                    field["unsupportedTypeValue"] = empty_time
+                    field["hasValue"] = False
 
             # Handle Address fields
             elif field_name in ["Pickup Address"] and field_type == "address":
