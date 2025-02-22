@@ -71,6 +71,7 @@ def extract_json_content(api_response: Dict) -> Dict:
 
 def populate_values_and_update_template_by_name(
     template: Dict,
+    ticket_data:Dict,
     customer_name: Optional[str] = None,
     pickup_time: Optional[datetime] = None,
     drop_time: Optional[datetime] = None,
@@ -99,6 +100,7 @@ def populate_values_and_update_template_by_name(
     and update the default values in the template.
     """
     values = {}
+    print(ticket_data,"32222222222222222222222222222")
 
     if "label" in template:
         template["label"] = "Ticket 1234"

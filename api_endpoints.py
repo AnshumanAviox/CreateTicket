@@ -69,8 +69,8 @@ async def create_process(
     ticket_data = await get_ticket_data(request.ticket_id)
     # print(ticket_data,"==============================")
     # Continue with existing template creation logic
-    template_content = await get_template_content(access_token, request.template_id, ticket_data)
-    values = populate_values_and_update_template_by_name(template_content)
+    template_content = await get_template_content(access_token, request.template_id)
+    values = populate_values_and_update_template_by_name(template_content, ticket_data)
     print(values,"00000000000000000000000000000000000")
     
     metadata = {
