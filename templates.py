@@ -158,17 +158,41 @@ def populate_values_and_update_template_by_name(
                 address_options = field.get("options", {})
                 location_uuid = address_options.get("address", {}).get("uuid", "")
                 
+                # Format complete address from components
+                if field_name == "Pickup Address":
+                    address_line1 = ticket_data.get('From_Address_1', '')
+                    address_line2 = ticket_data.get('From_Address_2', '')
+                    city = ticket_data.get('From_City', '')
+                    state = ticket_data.get('From_State', '')
+                    zip_code = str(ticket_data.get('From_Zip', ''))
+                else:  # Drop Address
+                    address_line1 = ticket_data.get('To_Address_1', '')
+                    address_line2 = ticket_data.get('To_Address_2', '')
+                    city = ticket_data.get('To_City', '')
+                    state = ticket_data.get('To_State', '')
+                    zip_code = str(ticket_data.get('To_Zip', ''))
+
+                # Combine address components
+                full_address = address_line1
+                if address_line2:
+                    full_address += f" {address_line2}"
+                if city and state:
+                    full_address += f", {city}, {state}"
+                if zip_code:
+                    full_address += f" {zip_code}"
+                
                 address_value = {
                     location_uuid: {
-                        address_options["address"]["options"]["location"]["uuid"]: "",
+                        address_options["address"]["options"]["location"]["uuid"]: full_address,
                         address_options["address"]["options"]["latitude"]["uuid"]: "",
                         address_options["address"]["options"]["longitude"]["uuid"]: "",
                         address_options["address"]["options"]["image"]["uuid"]: [],
                         address_options["address"]["options"]["accuracy"]["uuid"]: ""
                     },
-                    address_options["zipCode"]["uuid"]: ""
+                    address_options["zipCode"]["uuid"]: zip_code
                 }
                 values[address_uuid] = address_value
+                field["defaultValue"] = address_value
                 field["unsupportedTypeValue"] = address_value
 
             # Handle Separator
