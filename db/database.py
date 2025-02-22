@@ -7,19 +7,10 @@ settings = Settings()
 
 # Create database engine with error handling
 try:
-    connection_string = (
-        f"mssql+pyodbc://{settings.DATABASE_URL}"
-        if "://" in settings.DATABASE_URL
-        else settings.DATABASE_URL
-    )
-    
     engine = create_engine(
-        connection_string,
+        settings.DATABASE_URL,
         pool_pre_ping=True,
-        pool_recycle=3600,
-        connect_args={
-            "timeout": 30
-        }
+        pool_recycle=3600
     )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 except Exception as e:
