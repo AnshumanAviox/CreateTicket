@@ -242,11 +242,21 @@ def populate_values_and_update_template_by_name(
                 field_uuid = field["uuid"]
 
             # Handle Drop Company and Contact
-            elif field_name in ["Drop Company", "Drop Contact"] and field_type == "text":
+            elif field_name in ["Drop Company"] and field_type == "text":
                 field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
+                company = ticket_data.get('To_Company', '')
+                values[field_uuid] = company
+                field["defaultValue"] = company
+                field["unsupportedTypeValue"] = company
+
+            elif field_name in ["Drop Contact"] and field_type == "text":
+                field_uuid = field["uuid"]
+                contact = ticket_data.get('To_Contact', '')
+                phone = ticket_data.get('To_Phone', '')
+                field_value = f"{contact} - {phone}" if contact and phone else contact or phone
+                values[field_uuid] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
 
             # Handle Drop Time
             elif field_name.strip().lower() == "drop time" and field_type.strip().lower() == "date":
