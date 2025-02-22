@@ -296,9 +296,9 @@ def populate_values_and_update_template_by_name(
                 cod = ticket_data.get('COD', '')
                 notes = ticket_data.get('Notes', '')
                 field_value = f"{vehicle_type}{po}{pieces}{skids}{weight}{cod}{notes}" if vehicle_type and po and pieces and skids and weight and cod and notes else vehicle_type or po or pieces or skids or weight or cod or notes
-                values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
+                values[field_uuid] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
 
             # Handle Signature
             elif field_name == "Signature" and field_type == "signature":
