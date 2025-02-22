@@ -111,8 +111,8 @@ def populate_values_and_update_template_by_name(
             if field_name in ["Customer", "Contact Info"] and field_type == "text":
                 field_uuid = field["uuid"]
                 values[field_uuid] = ""
-                field["defaultValue"] = ""
-                field["unsupportedTypeValue"] = ""
+                field["defaultValue"] = "New John"
+                field["unsupportedTypeValue"] = "New John"
 
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
