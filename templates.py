@@ -140,17 +140,18 @@ def populate_values_and_update_template_by_name(
                         "tzd": "UTC"
                     }
                     # values[field_uuid] = formatted_time
-                    field_value = ticket_data.get('Pickup_Date','')
+                    field_value = ticket_data.get('Pickup_Date', '')
+                    print(field_value,"09090909990909009090909090")
                     field["value"] = field_value
                     field["defaultValue"] = field_value
                     field["unsupportedTypeValue"] = field_value
                     field["hasValue"] = True
-                else:
-                    empty_time = {"date": "", "time": "", "tzd": ""}
-                    field["value"] = empty_time
-                    field["defaultValue"] = empty_time
-                    field["unsupportedTypeValue"] = empty_time
-                    field["hasValue"] = False
+                # else:
+                #     empty_time = {"date": "", "time": "", "tzd": ""}
+                #     field["value"] = empty_time
+                #     field["defaultValue"] = empty_time
+                #     field["unsupportedTypeValue"] = empty_time
+                #     field["hasValue"] = False
 
             # Handle Address fields
             elif field_name in ["Pickup Address"] and field_type == "address":
@@ -295,7 +296,7 @@ def populate_values_and_update_template_by_name(
                 weight = ticket_data.get('Weight', '')
                 cod = ticket_data.get('COD', '')
                 notes = ticket_data.get('Notes', '')
-                field_value = f"{vehicle_type}{po}{pieces}{skids}{weight}{cod}{notes}" if vehicle_type and po and pieces and skids and weight and cod and notes else vehicle_type or po or pieces or skids or weight or cod or notes
+                field_value = f"{vehicle_type}, {po}, {pieces}, {skids}, {weight}, {cod}, {notes}" if vehicle_type and po and pieces and skids and weight and cod and notes else vehicle_type or po or pieces or skids or weight or cod or notes
                 values[field_uuid] = field_value
                 field["defaultValue"] = field_value
                 field["unsupportedTypeValue"] = field_value
