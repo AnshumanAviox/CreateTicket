@@ -117,15 +117,18 @@ def populate_values_and_update_template_by_name(
                 values[field_uuid] = field_value
                 field["defaultValue"] = field_value
                 field["unsupportedTypeValue"] = field_value
-                # values[field_uuid] = ""
-                # field["defaultValue"] = ticket_data.get('From_Company', ''),
-                # field["unsupportedTypeValue"] = ticket_data.get('From_Company','')
 
             elif field_name in ["Contact Info"] and field_type == "text":
                 field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = "New John"
-                field["unsupportedTypeValue"] = "New John"
+                contact = ticket_data.get('From_Contact', '')
+                phone = ticket_data.get('From_Phone', '')
+                field_value = f"{contact} - {phone}" if contact and phone else contact or phone
+                values[field_uuid] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
+                # values[field_uuid] = ""
+                # field["defaultValue"] = "New John"
+                # field["unsupportedTypeValue"] = "New John"
 
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
