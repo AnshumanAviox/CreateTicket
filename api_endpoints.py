@@ -71,7 +71,7 @@ async def create_process(
     # Continue with existing template creation logic
     template_content = await get_template_content(access_token, request.template_id)
     values = populate_values_and_update_template_by_name(template_content, ticket_data)
-    print(values,"00000000000000000000000000000000000")
+    # print(values,"00000000000000000000000000000000000")
     
     metadata = {
         "Label": f"Ticket {request.ticket_id}",

@@ -100,7 +100,7 @@ def populate_values_and_update_template_by_name(
     and update the default values in the template.
     """
     values = {}
-    print(ticket_data,"32222222222222222222222222222")
+    print(ticket_data,"This is ticket data output=========================")
 
     if "label" in template:
         template["label"] = "Ticket 1234"
@@ -132,6 +132,7 @@ def populate_values_and_update_template_by_name(
 
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
+                print(ticket_data.get('Pickup_Date', ''), "09090909990909009090909090")
                 field_uuid = field.get("uuid")
                 if pickup_time:
                 #     formatted_time = {
@@ -141,7 +142,7 @@ def populate_values_and_update_template_by_name(
                 #     }
                 # values[field_uuid] = formatted_time
                     field_value = ticket_data.get('Pickup_Date', '')
-                    print(field_value,"09090909990909009090909090")
+                    # print(field_value,"09090909990909009090909090")
                     field["value"] = field_value
                     field["defaultValue"] = field_value
                     field["unsupportedTypeValue"] = field_value
