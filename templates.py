@@ -141,7 +141,7 @@ def populate_values_and_update_template_by_name(
                 #     }
                 # values[field_uuid] = formatted_time
                     field_value = ticket_data.get('Pickup_Date', '')
-                    # print(field_value,"09090909990909009090909090")
+                    print(field_value,"09090909990909009090909090")
                     field["value"] = field_value
                     field["defaultValue"] = field_value
                     field["unsupportedTypeValue"] = field_value
