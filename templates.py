@@ -134,21 +134,25 @@ def populate_values_and_update_template_by_name(
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
                 pickup_datetime = ticket_data.get('Pickup_Date')
-                print(pickup_datetime,"This is Pickup datetime =================================")
+                print(pickup_datetime, "This is Pickup datetime =================================")
                 
                 if pickup_datetime:
-                    formatted_time = {
-                        "date": pickup_datetime.strftime("%m/%d/%Y"),
-                        "time": pickup_datetime.strftime("%I:%M %p"),
-                        "tzd": "UTC"
-                    }
+                    # Format datetime into array format
+                    formatted_time = [
+                        {
+                            "date": pickup_datetime.strftime("%m/%d/%Y"),
+                            "time": pickup_datetime.strftime("%I:%M %p"),
+                            "tzd": "UTC"
+                        }
+                    ]
                     values[field_uuid] = formatted_time
                     field["value"] = formatted_time
                     field["defaultValue"] = formatted_time
                     field["unsupportedTypeValue"] = formatted_time
                     field["hasValue"] = True
                 else:
-                    empty_time = {"date": "", "time": "", "tzd": ""}
+                    # Empty array with empty time object
+                    empty_time = [{"date": "", "time": "", "tzd": ""}]
                     values[field_uuid] = empty_time
                     field["value"] = empty_time
                     field["defaultValue"] = empty_time
