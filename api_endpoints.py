@@ -141,6 +141,8 @@ async def create_process(
         "Recipients": [{"Msisdn": request.msisdn}],
         "Timezone": "America/Chicago"
     }
+
+    # data_from_db = get_template_data_from_t_id(id=request.ticket_id)
     
     payload = {
         "Template": json.dumps(template_content),
