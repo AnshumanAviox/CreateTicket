@@ -113,9 +113,13 @@ def populate_values_and_update_template_by_name(
             # Handle Customer and Contact Info fields
             if field_name in ["Customer"] and field_type == "text":
                 field_uuid = field["uuid"]
-                values[field_uuid] = ""
-                field["defaultValue"] = ticket_data.get('From_Company', ''),
-                field["unsupportedTypeValue"] = ticket_data.get('From_Company','')
+                field_value = ticket_data.get('From_Company', '')
+                values[field_uuid] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
+                # values[field_uuid] = ""
+                # field["defaultValue"] = ticket_data.get('From_Company', ''),
+                # field["unsupportedTypeValue"] = ticket_data.get('From_Company','')
 
             elif field_name in ["Contact Info"] and field_type == "text":
                 field_uuid = field["uuid"]
