@@ -122,7 +122,7 @@ def populate_values_and_update_template_by_name(
                 field_uuid = field["uuid"]
                 contact = ticket_data.get('From_Contact', '')
                 phone = ticket_data.get('From_Phone', '')
-                field_value = f"{contact} - {phone}" if contact and phone else contact or phone
+                field_value = f"{contact}{phone}" if contact and phone else contact or phone
                 values[field_uuid] = field_value
                 field["defaultValue"] = field_value
                 field["unsupportedTypeValue"] = field_value
@@ -280,8 +280,22 @@ def populate_values_and_update_template_by_name(
                     field["hasValue"] = False
 
             # Handle Notes and Ticket Details
-            elif field_name in ["Notes", "Ticket Details"] and field_type == "textarea":
+            elif field_name in ["Notes"] and field_type == "textarea":
                 field_uuid = field["uuid"]
+                values[field_uuid] = ""
+                field["defaultValue"] = ""
+                field["unsupportedTypeValue"] = ""
+
+            elif field_name in ["Ticket Details"] and field_type == "textarea":
+                field_uuid = field["uuid"]
+                Vehicle_Type = ticket_data.get('Vehicle_Type', '')
+                PO = ticket_data.get('PO', '')
+                Pieces = ticket_data.get('Pieces', '')
+                Skids = ticket_data.get('Skids', '')
+                Weight = ticket_data.get('Weight', '')
+                COD = ticket_data.get('COD', '')
+                Notes = ticket_data.get('Notes', '')
+                field_value = f"{Vehicle_Type}{PO}{Pieces}{Skids}{Weight}{COD}{Notes}" if Vehicle_Type and PO and Pieces and Skids and Weight and COD and Notes else Vehicle_Type or PO or Pieces or Skids or Weight or COD or Notes
                 values[field_uuid] = ""
                 field["defaultValue"] = ""
                 field["unsupportedTypeValue"] = ""
