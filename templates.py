@@ -134,6 +134,7 @@ def populate_values_and_update_template_by_name(
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
                 pickup_datetime = ticket_data.get('Pickup_Date')
+                print(pickup_datetime,"This is Pickup datetime =================================")
                 
                 if pickup_datetime:
                     formatted_time = {
