@@ -72,7 +72,7 @@ def extract_json_content(api_response: Dict) -> Dict:
 def populate_values_and_update_template_by_name(
     template: Dict,
     ticket_data:Dict,
-    customer_name: Optional[str] = None,
+    # customer_name: Optional[str] = None,
     pickup_time: Optional[datetime] = None,
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
@@ -133,19 +133,19 @@ def populate_values_and_update_template_by_name(
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
-                if pickup_time:
-                    formatted_time = {
-                        "date": "02/04/2025",
-                        "time": "10:45 AM",
-                        "tzd": "UTC"
-                    }
-                    # values[field_uuid] = formatted_time
-                    field_value = ticket_data.get('Pickup_Date', '')
-                    print(field_value,"09090909990909009090909090")
-                    field["value"] = field_value
-                    field["defaultValue"] = field_value
-                    field["unsupportedTypeValue"] = field_value
-                    field["hasValue"] = True
+                # if pickup_time:
+                #     formatted_time = {
+                #         "date": "02/04/2025",
+                #         "time": "10:45 AM",
+                #         "tzd": "UTC"
+                #     }
+                # values[field_uuid] = formatted_time
+                field_value = ticket_data.get('Pickup_Date', '')
+                # print(field_value,"09090909990909009090909090")
+                field["value"] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
+                # field["hasValue"] = True
                 # else:
                 #     empty_time = {"date": "", "time": "", "tzd": ""}
                 #     field["value"] = empty_time
