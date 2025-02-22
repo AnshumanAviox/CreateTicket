@@ -67,6 +67,7 @@ async def create_process(
     """Create empty process from template"""
     # First fetch and print the ticket data
     ticket_data = await get_ticket_data(request.ticket_id)
+    print(ticket_data,"==============================")
     
     # Continue with existing template creation logic
     template_content = await get_template_content(access_token, request.template_id)
