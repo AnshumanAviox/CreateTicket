@@ -288,14 +288,14 @@ def populate_values_and_update_template_by_name(
 
             elif field_name in ["Ticket Details"] and field_type == "textarea":
                 field_uuid = field["uuid"]
-                Vehicle_Type = ticket_data.get('Vehicle_Type', '')
-                PO = ticket_data.get('PO', '')
-                Pieces = ticket_data.get('Pieces', '')
-                Skids = ticket_data.get('Skids', '')
-                Weight = ticket_data.get('Weight', '')
-                COD = ticket_data.get('COD', '')
-                Notes = ticket_data.get('Notes', '')
-                field_value = f"{Vehicle_Type}{PO}{Pieces}{Skids}{Weight}{COD}{Notes}" if Vehicle_Type and PO and Pieces and Skids and Weight and COD and Notes else Vehicle_Type or PO or Pieces or Skids or Weight or COD or Notes
+                vehicle_type = ticket_data.get('Vehicle_Type', '')
+                po = ticket_data.get('PO', '')
+                pieces = ticket_data.get('Pieces', '')
+                skids = ticket_data.get('Skids', '')
+                weight = ticket_data.get('Weight', '')
+                cod = ticket_data.get('COD', '')
+                notes = ticket_data.get('Notes', '')
+                field_value = f"{vehicle_type}{po}{pieces}{skids}{weight}{cod}{notes}" if vehicle_type and po and pieces and skids and weight and cod and notes else vehicle_type or po or pieces or skids or weight or cod or notes
                 values[field_uuid] = ""
                 field["defaultValue"] = ""
                 field["unsupportedTypeValue"] = ""
