@@ -15,14 +15,35 @@ try:
     conn = pyodbc.connect(conn_str)
     cursor = conn.cursor()
 
-    # Sample query to fetch data (Modify as per your requirement)
-    query = "SELECT TOP 10 * FROM your_table_name"
-    cursor.execute(query)
+    # Define the Ticket_ID to search
+    ticket_id = '070508001'
 
-    # Fetch and print results
+    # SQL Query
+    query = """
+    SELECT 
+        [Billing_ID], [Ticket_ID], [Customer_ID], [Called], [Pickup_Date], [Vehicle_Type],
+        [Rate_Type], [Notes], [PO], [Pieces], [Skids], [Weight], [COD], 
+        [From_Company], [From_Contact], [From_Address_1], [From_Address_2], 
+        [From_City], [From_State], [From_Zip], [From_Phone], [From_Alt_Phone], 
+        [To_Company], [To_Contact], [To_Address_1], [To_Address_2], 
+        [To_City], [To_State], [To_Zip], [To_Phone], [To_Alt_Phone]
+    FROM [dbo].[INVOICE_TABLE]
+    WHERE Ticket_ID = ?;
+    """
+
+    # Execute query
+    cursor.execute(query, (ticket_id,))
+
+    # Fetch and print data
     columns = [column[0] for column in cursor.description]
-    for row in cursor.fetchall():
-        print(dict(zip(columns, row)))  # Print row as dictionary
+    results = cursor.fetchall()
+
+    if results:
+        print("Query Result:")
+        for row in results:
+            print(dict(zip(columns, row)))
+    else:
+        print("No records found for Ticket_ID:", ticket_id)
 
     # Close connection
     cursor.close()

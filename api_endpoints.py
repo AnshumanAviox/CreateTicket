@@ -10,6 +10,8 @@ from models import (
     Settings
 )
 from templates import get_template_content, populate_values_and_update_template_by_name
+import pyodbc
+from typing import Dict, Any
 
 settings = Settings()
 router = APIRouter()
@@ -63,6 +65,10 @@ async def create_process(
     access_token: str = Depends(get_access_token)
 ):
     """Create empty process from template"""
+    # First fetch and print the ticket data
+    ticket_data = await get_ticket_data(request.ticket_id)
+    
+    # Continue with existing template creation logic
     template_content = await get_template_content(access_token, request.template_id)
     values = populate_values_and_update_template_by_name(template_content)
     
@@ -162,3 +168,59 @@ async def create_process_request(access_token: str, msisdn: str, payload: dict):
             status_code=500,
             detail=f"Error creating process: {str(e)}"
         )
+
+async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
+    """Fetch ticket data from database"""
+    # Database connection details
+    server = "172.31.6.34"
+    database = "CHILI_PROD"
+    username = "chiliadmin"
+    password = "h77pc0l0"
+    port = "1433"
+
+    conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server},{port};DATABASE={database};UID={username};PWD={password}"
+
+    try:
+        # Establish connection
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+
+        # SQL Query
+        query = """
+        SELECT 
+            [Billing_ID], [Ticket_ID], [Customer_ID], [Called], [Pickup_Date], [Vehicle_Type],
+            [Rate_Type], [Notes], [PO], [Pieces], [Skids], [Weight], [COD], 
+            [From_Company], [From_Contact], [From_Address_1], [From_Address_2], 
+            [From_City], [From_State], [From_Zip], [From_Phone], [From_Alt_Phone], 
+            [To_Company], [To_Contact], [To_Address_1], [To_Address_2], 
+            [To_City], [To_State], [To_Zip], [To_Phone], [To_Alt_Phone]
+        FROM [dbo].[INVOICE_TABLE]
+        WHERE Ticket_ID = ?;
+        """
+
+        # Execute query
+        cursor.execute(query, (ticket_id,))
+        
+        # Get column names and results
+        columns = [column[0] for column in cursor.description]
+        row = cursor.fetchone()
+        
+        if row:
+            # Convert row to dictionary
+            ticket_data = dict(zip(columns, row))
+            print("Ticket Data Found:")
+            print(ticket_data)  # Print the data to terminal
+            return ticket_data
+        else:
+            print(f"No data found for ticket ID: {ticket_id}")
+            return {}
+
+    except Exception as e:
+        print(f"Database Error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {str(e)}"
+        )
+    finally:
+        cursor.close()
+        conn.close()
