@@ -71,6 +71,7 @@ def extract_json_content(api_response: Dict) -> Dict:
 
 def populate_values_and_update_template_by_name(
     template: Dict,
+    customer_name: Optional[str] = None,
     pickup_time: Optional[datetime] = None,
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
@@ -108,7 +109,13 @@ def populate_values_and_update_template_by_name(
             field_type = field.get("type")
 
             # Handle Customer and Contact Info fields
-            if field_name in ["Customer", "Contact Info"] and field_type == "text":
+            if field_name in ["Customer"] and field_type == "text":
+                field_uuid = field["uuid"]
+                values[field_uuid] = ""
+                field["defaultValue"] = "New John"
+                field["unsupportedTypeValue"] = "New John"
+
+            elif field_name in ["Contact Info"] and field_type == "text":
                 field_uuid = field["uuid"]
                 values[field_uuid] = ""
                 field["defaultValue"] = "New John"

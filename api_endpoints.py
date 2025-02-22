@@ -67,11 +67,11 @@ async def create_process(
     """Create empty process from template"""
     # First fetch and print the ticket data
     ticket_data = await get_ticket_data(request.ticket_id)
-    print(ticket_data,"==============================")
-    
+    # print(ticket_data,"==============================")
     # Continue with existing template creation logic
-    template_content = await get_template_content(access_token, request.template_id)
+    template_content = await get_template_content(access_token, request.template_id, ticket_data)
     values = populate_values_and_update_template_by_name(template_content)
+    print(values,"00000000000000000000000000000000000")
     
     metadata = {
         "Label": f"Ticket {request.ticket_id}",
@@ -92,60 +92,60 @@ async def create_process(
     
     return await create_process_request(access_token, request.msisdn, payload)
 
-@router.post("/process/create-with-data")
-async def create_process_with_data(
-    process_data: ProcessRequest,
-    access_token: str = Depends(get_access_token)
-):
-    """Create process with provided data"""
-    template_content = await get_template_content(
-        access_token, 
-        process_data.template_id
-    )
-    values = populate_values_and_update_template_by_name(
-        template_content,
-        pickup_time=process_data.pickup_time,
-        drop_time=process_data.drop_time,
-        trip_start_time=process_data.trip_start_time,
-        trip_end_time=process_data.trip_end_time,
-        trip_start_address=process_data.trip_start_address,
-        trip_end_address=process_data.trip_end_address,
-        trip_start_latitude=process_data.trip_start_latitude,
-        trip_start_longitude=process_data.trip_start_longitude,
-        trip_end_latitude=process_data.trip_end_latitude,
-        trip_end_longitude=process_data.trip_end_longitude,
-        wait_start_time=process_data.wait_start_time,
-        wait_end_time=process_data.wait_end_time,
-        wait_start_address=process_data.wait_start_address,
-        wait_end_address=process_data.wait_end_address,
-        wait_start_latitude=process_data.wait_start_latitude,
-        wait_start_longitude=process_data.wait_start_longitude,
-        wait_end_latitude=process_data.wait_end_latitude,
-        wait_end_longitude=process_data.wait_end_longitude
-    )
+# @router.post("/process/create-with-data")
+# async def create_process_with_data(
+#     process_data: ProcessRequest,
+#     access_token: str = Depends(get_access_token)
+# ):
+#     """Create process with provided data"""
+#     template_content = await get_template_content(
+#         access_token, 
+#         process_data.template_id
+#     )
+#     values = populate_values_and_update_template_by_name(
+#         template_content,
+#         pickup_time=process_data.pickup_time,
+#         drop_time=process_data.drop_time,
+#         trip_start_time=process_data.trip_start_time,
+#         trip_end_time=process_data.trip_end_time,
+#         trip_start_address=process_data.trip_start_address,
+#         trip_end_address=process_data.trip_end_address,
+#         trip_start_latitude=process_data.trip_start_latitude,
+#         trip_start_longitude=process_data.trip_start_longitude,
+#         trip_end_latitude=process_data.trip_end_latitude,
+#         trip_end_longitude=process_data.trip_end_longitude,
+#         wait_start_time=process_data.wait_start_time,
+#         wait_end_time=process_data.wait_end_time,
+#         wait_start_address=process_data.wait_start_address,
+#         wait_end_address=process_data.wait_end_address,
+#         wait_start_latitude=process_data.wait_start_latitude,
+#         wait_start_longitude=process_data.wait_start_longitude,
+#         wait_end_latitude=process_data.wait_end_latitude,
+#         wait_end_longitude=process_data.wait_end_longitude
+#     )
     
-    metadata = {
-        "Label": f"Ticket {process_data.ticket_id}",
-        "Priority": 2,
-        "TemplateId": process_data.template_id,
-        "TemplateLabel": "Test Process",
-        "TemplateVersion": 34,
-        "Recipients": [{"Msisdn": settings.MSISDN}],
-        "Timezone": "America/Chicago"
-    }
+#     metadata = {
+#         "Label": f"Ticket {process_data.ticket_id}",
+#         "Priority": 2,
+#         "TemplateId": process_data.template_id,
+#         "TemplateLabel": "Test Process",
+#         "TemplateVersion": 34,
+#         "Recipients": [{"Msisdn": settings.MSISDN}],
+#         "Timezone": "America/Chicago"
+#     }
     
-    payload = {
-        "Template": json.dumps(template_content),
-        "Metadata": metadata,
-        "Values": json.dumps(values),
-        "UseRawValues": True
-    }
+#     payload = {
+#         "Template": json.dumps(template_content),
+#         "Metadata": metadata,
+#         "Values": json.dumps(values),
+#         "UseRawValues": True
+#     }
     
-    return await create_process_request(
-        access_token, 
-        settings.MSISDN, 
-        payload
-    )
+#     return await create_process_request(
+#         access_token, 
+#         settings.MSISDN, 
+#         payload
+#     )
 
 async def create_process_request(access_token: str, msisdn: str, payload: dict):
     """Send process creation request"""
