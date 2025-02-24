@@ -159,10 +159,12 @@ def populate_values_and_update_template_by_name(
                         # Handle datetime object from database
                         if isinstance(pickup_date, datetime):
                             formatted_date = pickup_date.strftime("%Y%m%dT%H:%M:%S")
+                            print(type(formatted_date),"rrrrrrrrrrrrrrrrrrrrr")
                         else:
                             # If it's a string, parse it first
                             parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
                             formatted_date = parsed_date.strftime("%Y%m%dT%H:%M:%S")
+                            print(formatted_date,"lllllllllllllllllllllllll")
                         
                         # Set the formatted date string
                         values[field_uuid] = formatted_date
