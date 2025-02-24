@@ -73,7 +73,7 @@ def populate_values_and_update_template_by_name(
     template: Dict,
     ticket_data:Dict,
     customer_name: Optional[str] = None,
-    pickup_time: Optional[datetime] ="2024-09-07T11:16:35",
+    pickup_time: Optional[datetime] = None,
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
     trip_end_time: Optional[datetime] = None,
