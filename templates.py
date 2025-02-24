@@ -133,58 +133,58 @@ def populate_values_and_update_template_by_name(
             # Handle Pickup Time field
             elif field_name in ["Pickup Time"] and field_type == "date":
                 field_uuid = field.get("uuid")
-                # if pickup_time:
-                #     values[field_uuid] = formatted_time
-                #     field_value = ticket_data.get('Pickup_Date', '')
-                #     field["value"] = field_value
-                #     field["defaultValue"] = field_value
-                #     field["unsupportedTypeValue"] = field_value
-                #     field["hasValue"] = True
-                # else:
-                #     empty_time = {"date": "", "time": "", "tzd": ""}
-                #     field["value"] = empty_time
-                #     field["defaultValue"] = empty_time
-                #     field["unsupportedTypeValue"] = empty_time
-                #     field["hasValue"] = False
-                pickup_date = ticket_data.get('Pickup_Date', '')
-                
-                if pickup_date:
-                    try:
-                        # Try different date formats
-                        try:
-                            # Try format "2007-05-08 06:39:48"
-                            parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
-                        except ValueError:
-                            # Try format "20240907T11:16:35"
-                            parsed_date = datetime.strptime(str(pickup_date), "%Y%m%dT%H:%M:%S")
-                        
-                        formatted_date = [
-                            parsed_date.year,
-                            parsed_date.month,
-                            parsed_date.day,
-                            parsed_date.hour,
-                            parsed_date.minute,
-                            parsed_date.second
-                        ]
-                        
-                        # Set the formatted date array
-                        values[field_uuid] = formatted_date
-                        field["value"] = formatted_date
-                        field["defaultValue"] = formatted_date
-                        field["unsupportedTypeValue"] = formatted_date
-                        field["hasValue"] = True
-                        
-                    except Exception as e:
-                        print(f"Error formatting pickup date: {e}")
-                        field["value"] = []
-                        field["defaultValue"] = []
-                        field["unsupportedTypeValue"] = []
-                        field["hasValue"] = False
+                if pickup_time:
+                    # values[field_uuid] = formatted_time
+                    field_value = ticket_data.get('Pickup_Date', '')
+                    field["value"] = field_value
+                    field["defaultValue"] = field_value
+                    field["unsupportedTypeValue"] = field_value
+                    field["hasValue"] = True
                 else:
-                    field["value"] = []
-                    field["defaultValue"] = []
-                    field["unsupportedTypeValue"] = []
+                    empty_time = {"date": "", "time": "", "tzd": ""}
+                    field["value"] = empty_time
+                    field["defaultValue"] = empty_time
+                    field["unsupportedTypeValue"] = empty_time
                     field["hasValue"] = False
+                # pickup_date = ticket_data.get('Pickup_Date', '')
+                
+                # if pickup_date:
+                #     try:
+                #         # Try different date formats
+                #         try:
+                #             # Try format "2007-05-08 06:39:48"
+                #             parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
+                #         except ValueError:
+                #             # Try format "20240907T11:16:35"
+                #             parsed_date = datetime.strptime(str(pickup_date), "%Y%m%dT%H:%M:%S")
+                        
+                #         formatted_date = [
+                #             parsed_date.year,
+                #             parsed_date.month,
+                #             parsed_date.day,
+                #             parsed_date.hour,
+                #             parsed_date.minute,
+                #             parsed_date.second
+                #         ]
+                        
+                #         # Set the formatted date array
+                #         values[field_uuid] = formatted_date
+                #         field["value"] = formatted_date
+                #         field["defaultValue"] = formatted_date
+                #         field["unsupportedTypeValue"] = formatted_date
+                #         field["hasValue"] = True
+                        
+                #     except Exception as e:
+                #         print(f"Error formatting pickup date: {e}")
+                #         field["value"] = []
+                #         field["defaultValue"] = []
+                #         field["unsupportedTypeValue"] = []
+                #         field["hasValue"] = False
+                # else:
+                #     field["value"] = []
+                #     field["defaultValue"] = []
+                #     field["unsupportedTypeValue"] = []
+                #     field["hasValue"] = False
 
             # Handle Address fields
             elif field_name in ["Pickup Address"] and field_type == "address":
