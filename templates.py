@@ -134,24 +134,24 @@ def populate_values_and_update_template_by_name(
             elif field_name in ["Pickup Time"] and field_type == "date":
                 field_uuid = field.get("uuid")
                 print("2024-09-07T11:16:35","-0-------------------")
-                if pickup_time:
-                    formatted_time = {
-                        "date": "02/04/2025",
-                        "time": "10:45 AM",
-                        "tzd": "UTC"
-                    }
+                # if pickup_time:
+                #     formatted_time = {
+                #         "date": "02/04/2025",
+                #         "time": "10:45 AM",
+                #         "tzd": "UTC"
+                #     }
                     # values[field_uuid] = formatted_time
-                    field_value = ticket_data.get('Pickup_Date', '')
-                    field["value"] = "2024-09-07T11:16:35"
-                    field["defaultValue"] = "2024-09-07T11:16:35"
-                    field["unsupportedTypeValue"] = "2024-09-07T11:16:35"
-                    field["hasValue"] = True
-                else:
-                    empty_time = {"date": "", "time": "", "tzd": ""}
-                    field["value"] = empty_time
-                    field["defaultValue"] = empty_time
-                    field["unsupportedTypeValue"] = empty_time
-                    field["hasValue"] = False
+                field_value = ticket_data.get('Pickup_Date', '')
+                field["value"] = "2024-09-07T11:16:35"
+                field["defaultValue"] = "2024-09-07T11:16:35"
+                field["unsupportedTypeValue"] = "2024-09-07T11:16:35"
+                field["hasValue"] = True
+                # else:
+                #     empty_time = {"date": "", "time": "", "tzd": ""}
+                #     field["value"] = empty_time
+                #     field["defaultValue"] = empty_time
+                #     field["unsupportedTypeValue"] = empty_time
+                #     field["hasValue"] = False
 
             # Handle Address fields
             elif field_name in ["Pickup Address"] and field_type == "address":
