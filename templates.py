@@ -158,33 +158,45 @@ def populate_values_and_update_template_by_name(
                     try:
                         # Handle datetime object from database
                         if isinstance(pickup_date, datetime):
-                            formatted_date = pickup_date.strftime("%Y%m%dT%H:%M:%S")
-                            print(type(formatted_date),"rrrrrrrrrrrrrrrrrrrrr")
+                            formatted_date = [
+                                pickup_date.year,
+                                pickup_date.month,
+                                pickup_date.day,
+                                pickup_date.hour,
+                                pickup_date.minute,
+                                pickup_date.second
+                            ]
                         else:
                             # If it's a string, parse it first
                             parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
-                            formatted_date = parsed_date.strftime("%Y%m%dT%H:%M:%S")
-                            print(formatted_date,"lllllllllllllllllllllllll")
+                            formatted_date = [
+                                parsed_date.year,
+                                parsed_date.month,
+                                parsed_date.day,
+                                parsed_date.hour,
+                                parsed_date.minute,
+                                parsed_date.second
+                            ]
                         
-                        # Set the formatted date string
+                        # Set the formatted date array
                         values[field_uuid] = formatted_date
                         field["value"] = formatted_date
                         field["defaultValue"] = formatted_date
                         field["unsupportedTypeValue"] = formatted_date
                         field["hasValue"] = True
                         
-                        print(f"Formatted pickup time: {formatted_date}")  # Debug print
+                        print(f"Formatted pickup time array: {formatted_date}")  # Debug print
                         
                     except Exception as e:
                         print(f"Error formatting pickup date: {e}")
-                        field["value"] = ""
-                        field["defaultValue"] = ""
-                        field["unsupportedTypeValue"] = ""
+                        field["value"] = []
+                        field["defaultValue"] = []
+                        field["unsupportedTypeValue"] = []
                         field["hasValue"] = False
                 else:
-                    field["value"] = ""
-                    field["defaultValue"] = ""
-                    field["unsupportedTypeValue"] = ""
+                    field["value"] = []
+                    field["defaultValue"] = []
+                    field["unsupportedTypeValue"] = []
                     field["hasValue"] = False
 
             # Handle Address fields
