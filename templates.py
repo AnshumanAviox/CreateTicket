@@ -73,7 +73,7 @@ def populate_values_and_update_template_by_name(
     template: Dict,
     ticket_data:Dict,
     customer_name: Optional[str] = None,
-    pickup_time: Optional[datetime] = None,
+    pickup_time: Optional[datetime] ="2024-09-07T11:16:35",
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
     trip_end_time: Optional[datetime] = None,
@@ -100,7 +100,7 @@ def populate_values_and_update_template_by_name(
     and update the default values in the template.
     """
     values = {}
-    # print(ticket_data,"32222222222222222222222222222")
+    print(ticket_data,"32222222222222222222222222222")
 
     if "label" in template:
         template["label"] = "Ticket 1234"
@@ -133,6 +133,7 @@ def populate_values_and_update_template_by_name(
             # Handle Pickup Time field
             elif field_name.strip().lower() == "pickup time" and field_type.strip().lower() == "date":
                 field_uuid = field.get("uuid")
+                print("2024-09-07T11:16:35","-0-------------------")
                 if pickup_time:
                     formatted_time = {
                         "date": "02/04/2025",
@@ -141,9 +142,9 @@ def populate_values_and_update_template_by_name(
                     }
                     # values[field_uuid] = formatted_time
                     field_value = ticket_data.get('Pickup_Date', '')
-                    field["value"] = "2024-09-07T11:16:35 "
-                    field["defaultValue"] = "2024-09-07T11:16:35 "
-                    field["unsupportedTypeValue"] = "2024-09-07T11:16:35 "
+                    field["value"] = "2024-09-07T11:16:35"
+                    field["defaultValue"] = "2024-09-07T11:16:35"
+                    field["unsupportedTypeValue"] = "2024-09-07T11:16:35"
                     field["hasValue"] = True
                 else:
                     empty_time = {"date": "", "time": "", "tzd": ""}
