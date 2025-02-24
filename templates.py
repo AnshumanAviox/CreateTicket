@@ -141,9 +141,9 @@ def populate_values_and_update_template_by_name(
                     }
                     # values[field_uuid] = formatted_time
                     field_value = ticket_data.get('Pickup_Date', '')
-                    field["value"] = "20240907T11:16:35"
-                    field["defaultValue"] = "20240907T11:16:35"
-                    field["unsupportedTypeValue"] = "20240907T11:16:35"
+                    field["value"] = "2024-09-07T11:16:35 "
+                    field["defaultValue"] = "2024-09-07T11:16:35 "
+                    field["unsupportedTypeValue"] = "2024-09-07T11:16:35 "
                     field["hasValue"] = True
                 else:
                     empty_time = {"date": "", "time": "", "tzd": ""}
