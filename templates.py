@@ -150,8 +150,14 @@ def populate_values_and_update_template_by_name(
                 
                 if pickup_date:
                     try:
-                        # Parse the date string in format "20240907T11:16:35"
-                        parsed_date = datetime.strptime(str(pickup_date), "%Y%m%dT%H:%M:%S")
+                        # Try different date formats
+                        try:
+                            # Try format "2007-05-08 06:39:48"
+                            parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            # Try format "20240907T11:16:35"
+                            parsed_date = datetime.strptime(str(pickup_date), "%Y%m%dT%H:%M:%S")
+                        
                         formatted_date = [
                             parsed_date.year,
                             parsed_date.month,
@@ -293,8 +299,14 @@ def populate_values_and_update_template_by_name(
                 
                 if drop_date:
                     try:
-                        # Parse the date string in format "20240907T11:16:35"
-                        parsed_date = datetime.strptime(str(drop_date), "%Y%m%dT%H:%M:%S")
+                        # Try different date formats
+                        try:
+                            # Try format "2007-05-08 06:39:48"
+                            parsed_date = datetime.strptime(str(drop_date), "%Y-%m-%d %H:%M:%S")
+                        except ValueError:
+                            # Try format "20240907T11:16:35"
+                            parsed_date = datetime.strptime(str(drop_date), "%Y%m%dT%H:%M:%S")
+                        
                         formatted_date = [
                             parsed_date.year,
                             parsed_date.month,
