@@ -156,32 +156,45 @@ def populate_values_and_update_template_by_name(
                 
                 if pickup_date:
                     try:
-                        # Convert datetime to ISO format string
+                        # Handle datetime object from database
                         if isinstance(pickup_date, datetime):
-                            formatted_date = pickup_date.strftime("%Y-%m-%dT%H:%M:%S")
+                            formatted_time = {
+                                "date": pickup_date.strftime("%m/%d/%Y"),
+                                "time": pickup_date.strftime("%I:%M %p"),
+                                "tzd": "UTC"
+                            }
                         else:
-                            # If it's a string, parse it first then format
+                            # If it's a string, parse it first
                             parsed_date = datetime.strptime(str(pickup_date), "%Y-%m-%d %H:%M:%S")
-                            formatted_date = parsed_date.strftime("%Y-%m-%dT%H:%M:%S")
+                            formatted_time = {
+                                "date": parsed_date.strftime("%m/%d/%Y"),
+                                "time": parsed_date.strftime("%I:%M %p"),
+                                "tzd": "UTC"
+                            }
                         
-                        # Set the formatted date string
-                        print(formatted_date,"pppppppppppppppppppppppppppppp")
-                        values[field_uuid] = formatted_date
-                        field["value"] = formatted_date
-                        field["defaultValue"] = formatted_date
-                        field["unsupportedTypeValue"] = formatted_date
+                        # Set all required fields
+                        values[field_uuid] = formatted_time
+                        field["value"] = formatted_time
+                        field["defaultValue"] = formatted_time
+                        field["unsupportedTypeValue"] = formatted_time
                         field["hasValue"] = True
+                        
+                        print(f"Formatted pickup time: {formatted_time}")  # Debug print
                         
                     except Exception as e:
                         print(f"Error formatting pickup date: {e}")
-                        field["value"] = ""
-                        field["defaultValue"] = ""
-                        field["unsupportedTypeValue"] = ""
+                        empty_time = {"date": "", "time": "", "tzd": "UTC"}
+                        values[field_uuid] = empty_time
+                        field["value"] = empty_time
+                        field["defaultValue"] = empty_time
+                        field["unsupportedTypeValue"] = empty_time
                         field["hasValue"] = False
                 else:
-                    field["value"] = ""
-                    field["defaultValue"] = ""
-                    field["unsupportedTypeValue"] = ""
+                    empty_time = {"date": "", "time": "", "tzd": "UTC"}
+                    values[field_uuid] = empty_time
+                    field["value"] = empty_time
+                    field["defaultValue"] = empty_time
+                    field["unsupportedTypeValue"] = empty_time
                     field["hasValue"] = False
 
             # Handle Address fields
