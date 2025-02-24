@@ -103,7 +103,7 @@ def populate_values_and_update_template_by_name(
     print(ticket_data,"32222222222222222222222222222")
 
     if "label" in template:
-        template["label"] = ticket_data.get('Pickup_Date', '')
+        template["label"] = ticket_data.get('Ticket_ID', '')
 
     for block in template.get("blocks", []):
         for field in block.get("fields", []):
@@ -133,7 +133,13 @@ def populate_values_and_update_template_by_name(
             # Handle Pickup Time field
             elif field_name in ["Pickup Time"] and field_type == "date":
                 field_uuid = field.get("uuid")
+                print("2024-09-07T11:16:35","-0-------------------")
                 if pickup_time:
+                    formatted_time = {
+                        "date": "02/04/2025",
+                        "time": "10:45 AM",
+                        "tzd": "UTC"
+                    }
                     values[field_uuid] = formatted_time
                     field_value = ticket_data.get('Pickup_Date', '')
                     field["value"] = field_value
