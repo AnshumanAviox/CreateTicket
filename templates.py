@@ -165,6 +165,7 @@ def populate_values_and_update_template_by_name(
                             formatted_date = parsed_date.strftime("%Y-%m-%dT%H:%M:%S")
                         
                         # Set the formatted date string
+                        print(formatted_date,"pppppppppppppppppppppppppppppp")
                         values[field_uuid] = formatted_date
                         field["value"] = formatted_date
                         field["defaultValue"] = formatted_date
