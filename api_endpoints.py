@@ -269,8 +269,14 @@ async def process_owner_request_submit(
         "?filter=processOwnerRequestAndSubmit"
     )
     
+    # Add metadata to the payload
     payload = {
-        "Action": action
+        "Action": action,
+        "Metadata": {
+            "Recipients": [{"Msisdn": msisdn}],
+            "Priority": 2,
+            "Timezone": "America/Chicago"
+        }
     }
     if comment:
         payload["Comment"] = comment
