@@ -264,34 +264,14 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
-    # First get the template content for this process
-    template_content = await get_template_content(
-        access_token, 
-        "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c"  # Using the same template ID
-    )
-    
     process_url = (
         f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
         "?filter=processOwnerRequestAndSubmit"
     )
     
-    # Using the same structure as create_process
-    metadata = {
-        "Label": f"Process {process_id}",
-        "Priority": 2,
-        "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",
-        "TemplateLabel": "Test Process",
-        "TemplateVersion": 34,
-        "Recipients": [{"Msisdn": msisdn}],
-        "Timezone": "America/Chicago"
-    }
-    
+    # Simplified payload - only sending the action
     payload = {
-        "Action": action,
-        "Template": json.dumps(template_content),
-        "Metadata": metadata,
-        "Values": json.dumps({}),  # Empty values
-        "UseRawValues": True
+        "Action": action
     }
     
     if comment:
@@ -311,8 +291,7 @@ async def process_owner_request_submit(
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action,
-                    "template_id": metadata["TemplateId"]
+                    "action": action
                 },
                 "api_response": response.json()
             }
