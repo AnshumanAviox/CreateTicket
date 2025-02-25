@@ -251,7 +251,45 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
         cursor.close()
         conn.close()
 
-@router.post("/subscriber/{msisdn}/process/{process_id}")
+async def process_owner_request_submit(access_token: str, msisdn: str, process_id: str, action: str, comment: Optional[str] = None):
+    """Send process owner request and submit"""
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    process_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
+    
+    payload = {
+        "action": action
+    }
+    if comment:
+        payload["comment"] = comment
+    
+    try:
+        response = requests.post(process_url, json=payload, headers=headers)
+        if response.status_code in [200, 201, 202]:
+            return {
+                "status": "success",
+                "process": {
+                    "process_id": process_id,
+                    "msisdn": msisdn,
+                    "action": action
+                },
+                "api_response": response.json()
+            }
+            
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Failed to {action} process: {response.text}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during process {action}: {str(e)}"
+        )
+
+@router.post("/api/v1/subscriber/{msisdn}/process/{process_id}")
 async def process_owner_request_and_submit(
     msisdn: str,
     process_id: str,
@@ -263,44 +301,10 @@ async def process_owner_request_and_submit(
     Submit/cancel/complete a process without explicitly requesting ownership.
     Uses the processOwnerRequestAndSubmit filter.
     """
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-    
-    # Construct URL with filter parameter
-    process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-        "?filter=processOwnerRequestAndSubmit"
+    return await process_owner_request_submit(
+        access_token=access_token,
+        msisdn=msisdn,
+        process_id=process_id,
+        action=action.value,
+        comment=comment
     )
-    
-    payload = {
-        "action": action.value
-    }
-    if comment:
-        payload["comment"] = comment
-    
-    try:
-        response = requests.post(process_url, json=payload, headers=headers)
-        
-        if response.status_code in [200, 201, 202]:
-            return {
-                "status": "success",
-                "data": {
-                    "msisdn": msisdn,
-                    "process_id": process_id,
-                    "action": action.value,
-                    "response": response.json()
-                }
-            }
-            
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=f"Failed to {action.value} process: {response.text}"
-        )
-        
-    except requests.RequestException as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error during process {action.value}: {str(e)}"
-        )
