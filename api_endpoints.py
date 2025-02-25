@@ -269,13 +269,16 @@ async def process_owner_request_submit(
         "?filter=processOwnerRequestAndSubmit"
     )
     
-    # Add metadata to the payload
+    # Add metadata to the payload with required fields
     payload = {
         "Action": action,
         "Metadata": {
             "Recipients": [{"Msisdn": msisdn}],
             "Priority": 2,
-            "Timezone": "America/Chicago"
+            "Timezone": "America/Chicago",
+            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",  # Add template ID
+            "TemplateLabel": "Test Process",
+            "TemplateVersion": 34
         }
     }
     if comment:
@@ -289,7 +292,8 @@ async def process_owner_request_submit(
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action
+                    "action": action,
+                    "template_id": payload["Metadata"]["TemplateId"]
                 },
                 "api_response": response.json()
             }
