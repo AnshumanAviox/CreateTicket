@@ -95,7 +95,7 @@ async def create_process(
         "Values": json.dumps(values),
         "UseRawValues": True
     }
-    
+    print(payload,"========================== This is Payload =====================================")
     return await create_process_request(access_token, request.msisdn, payload)
 
 # @router.post("/process/create-with-data")
@@ -178,7 +178,7 @@ async def create_process_request(access_token: str, msisdn: str, payload: dict):
                     "ticket_id": payload["Metadata"]["Label"].split(" ")[1],  # Extract ticket_id from Label
                 },
                 "template": json.loads(payload["Template"]),  # Include the template
-                # "values": json.loads(payload["Values"]),      # Include the values
+                "values": json.loads(payload["Values"]),      # Include the values
                 "metadata": payload["Metadata"],              # Include the metadata
                 "api_response": response.json()               # Include original API response
             }
@@ -264,69 +264,49 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
-    # First, get the process details to get the template ID
-    process_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        "?filter=processOwnerRequestAndSubmit"
+    )
+    
+    # Submit with minimal required metadata
+    payload = {
+        "Action": action,
+        "Metadata": {
+            "Label": f"Process {process_id}",
+            "Priority": 2,
+            "Recipients": [{"Msisdn": msisdn}],
+            "Timezone": "America/Chicago"
+        }
+    }
+    
+    if comment:
+        payload["Comment"] = comment
     
     try:
-        # Get process details
-        process_response = requests.get(process_url, headers=headers)
-        if process_response.status_code != 200:
-            raise HTTPException(
-                status_code=process_response.status_code,
-                detail=f"Failed to get process details: {process_response.text}"
-            )
-        
-        process_data = process_response.json()
-        template_id = process_data.get("results", {}).get("TemplateId")
-        
-        if not template_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Could not find template ID in process details"
-            )
-        
-        # Now submit the process with complete metadata
-        submit_url = f"{process_url}?filter=processOwnerRequestAndSubmit"
-        
-        payload = {
-            "Action": action,
-            "Metadata": {
-                "Label": f"Process {process_id}",
-                "Priority": 2,
-                "Recipients": [{"Msisdn": msisdn}],
-                "Timezone": "America/Chicago",
-                "TemplateId": template_id
-            }
-        }
-        
-        if comment:
-            payload["Comment"] = comment
-        
-        print(f"Making request to: {submit_url}")
+        print(f"Making request to: {process_url}")
         print(f"With payload: {payload}")
         
-        response = requests.put(submit_url, json=payload, headers=headers)
+        response = requests.put(process_url, json=payload, headers=headers)
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
         
         if response.status_code in [200, 201, 202]:
+            response_data = response.json()
             return {
                 "status": "success",
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action,
-                    "template_id": template_id
+                    "action": action
                 },
-                "api_response": response.json()
+                "api_response": response_data
             }
             
         raise HTTPException(
             status_code=response.status_code,
             detail=f"Failed to {action} process: {response.text}"
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
