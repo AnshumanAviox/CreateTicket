@@ -270,13 +270,12 @@ async def process_owner_request_submit(
     )
     
     payload = {
-        "action": action
+        "Action": action
     }
     if comment:
-        payload["comment"] = comment
+        payload["Comment"] = comment
     
     try:
-        # Changed from POST to PUT
         response = requests.put(process_url, json=payload, headers=headers)
         if response.status_code in [200, 201, 202]:
             return {
