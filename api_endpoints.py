@@ -264,27 +264,41 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
-    process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-        "?filter=processOwnerRequestAndSubmit"
-    )
-    
-    # Add metadata to the payload with required fields
-    payload = {
-        "Action": action,
-        "Metadata": {
-            "Recipients": [{"Msisdn": msisdn}],
-            "Priority": 2,
-            "Timezone": "America/Chicago",
-            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",  # Add template ID
-            "TemplateLabel": "Test Process",
-            "TemplateVersion": 34
-        }
-    }
-    if comment:
-        payload["Comment"] = comment
-    
+    # First, get the process details to get the correct template info
+    process_details_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
     try:
+        details_response = requests.get(process_details_url, headers=headers)
+        if details_response.status_code != 200:
+            raise HTTPException(
+                status_code=details_response.status_code,
+                detail=f"Failed to get process details: {details_response.text}"
+            )
+        
+        process_details = details_response.json()
+        template_id = process_details.get("results", {}).get("TemplateId")
+        template_version = process_details.get("results", {}).get("TemplateVersion", 34)
+        
+        process_url = (
+            f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
+        )
+
+        print(process_url,"==================This is Process url========================")
+        
+        # Updated payload structure
+        payload = {
+            "Action": action,
+            "Metadata": {
+                "Recipients": [{"Msisdn": msisdn}],
+                "Priority": 2,
+                "Timezone": "America/Chicago",
+                "TemplateId": template_id,
+                "TemplateVersion": template_version,
+                "TemplateLabel": process_details.get("results", {}).get("Label", "Test Process")
+            }
+        }
+        if comment:
+            payload["Comment"] = comment
+        
         response = requests.put(process_url, json=payload, headers=headers)
         if response.status_code in [200, 201, 202]:
             return {
@@ -293,7 +307,7 @@ async def process_owner_request_submit(
                     "process_id": process_id,
                     "msisdn": msisdn,
                     "action": action,
-                    "template_id": payload["Metadata"]["TemplateId"]
+                    "template_id": template_id
                 },
                 "api_response": response.json()
             }
