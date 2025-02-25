@@ -178,7 +178,7 @@ async def create_process_request(access_token: str, msisdn: str, payload: dict):
                     "ticket_id": payload["Metadata"]["Label"].split(" ")[1],  # Extract ticket_id from Label
                 },
                 "template": json.loads(payload["Template"]),  # Include the template
-                "values": json.loads(payload["Values"]),      # Include the values
+                # "values": json.loads(payload["Values"]),      # Include the values
                 "metadata": payload["Metadata"],              # Include the metadata
                 "api_response": response.json()               # Include original API response
             }
@@ -251,47 +251,47 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
         cursor.close()
         conn.close()
 
-@router.post("/process/{process_id}")
+@router.post("/subscriber/{msisdn}/process/{process_id}")
 async def process_owner_request_and_submit(
+    msisdn: str,
     process_id: str,
     action: ProcessAction = Query(..., description="Action to perform (submit/cancel/complete)"),
-    msisdn: str = Query(..., description="Subscriber's MSISDN"),
     access_token: str = Depends(get_access_token),
     comment: Optional[str] = Query(None, description="Optional comment for the action")
 ):
     """
-    Submit/cancel/complete a process without explicitly requesting ownership
+    Submit/cancel/complete a process without explicitly requesting ownership.
+    Uses the processOwnerRequestAndSubmit filter.
     """
-    print(f"Received request - Process ID: {process_id}, Action: {action}, MSISDN: {msisdn}")
-    
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
     
-    base_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-    process_url = f"{base_url}?filter=processOwnerRequestAndSubmit"
-    
-    print(f"Making request to: {process_url}")
+    # Construct URL with filter parameter
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        "?filter=processOwnerRequestAndSubmit"
+    )
     
     payload = {
         "action": action.value
     }
     if comment:
         payload["comment"] = comment
-        
-    print(f"With payload: {payload}")
     
     try:
         response = requests.post(process_url, json=payload, headers=headers)
-        print(f"Response status: {response.status_code}")
-        print(f"Response body: {response.text}")
         
         if response.status_code in [200, 201, 202]:
             return {
-                "message": f"Process {action.value} successful",
-                "process_id": process_id,
-                "response": response.json()
+                "status": "success",
+                "data": {
+                    "msisdn": msisdn,
+                    "process_id": process_id,
+                    "action": action.value,
+                    "response": response.json()
+                }
             }
             
         raise HTTPException(
