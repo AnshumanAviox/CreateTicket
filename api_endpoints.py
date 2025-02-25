@@ -11,10 +11,16 @@ from models import (
 )
 from templates import get_template_content, populate_values_and_update_template_by_name
 import pyodbc
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from enum import Enum
 
 settings = Settings()
 router = APIRouter()
+
+class ProcessAction(Enum):
+    SUBMIT = "submit"
+    CANCEL = "cancel"
+    COMPLETE = "complete"
 
 @router.get("/template/{template_id}", response_model=ProcessTemplateResponse)
 async def get_template(
@@ -225,3 +231,61 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
     finally:
         cursor.close()
         conn.close()
+
+@router.post("/process/{process_id}/{action}")
+async def process_owner_request_and_submit(
+    process_id: str,
+    action: ProcessAction,
+    msisdn: str,
+    access_token: str = Depends(get_access_token),
+    comment: Optional[str] = None
+):
+    """
+    Submit/cancel/complete a process without explicitly requesting ownership
+    
+    Args:
+        process_id: ID of the process to act on
+        action: Action to perform (submit/cancel/complete)
+        msisdn: Subscriber's MSISDN
+        comment: Optional comment for the action
+    """
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Construct the URL with the processOwnerRequestAndSubmit filter
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        "?filter=processOwnerRequestAndSubmit"
+    )
+    
+    # Prepare the payload based on the action
+    payload = {
+        "action": action.value
+    }
+    
+    # Add comment if provided
+    if comment:
+        payload["comment"] = comment
+    
+    try:
+        response = requests.post(process_url, json=payload, headers=headers)
+        
+        if response.status_code in [200, 201, 202]:
+            return {
+                "message": f"Process {action.value} successful",
+                "process_id": process_id,
+                "response": response.json()
+            }
+            
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Failed to {action.value} process: {response.text}"
+        )
+        
+    except requests.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during process {action.value}: {str(e)}"
+        )
