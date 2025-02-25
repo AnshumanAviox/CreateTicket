@@ -251,14 +251,23 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
         cursor.close()
         conn.close()
 
-async def process_owner_request_submit(access_token: str, msisdn: str, process_id: str, action: str, comment: Optional[str] = None):
+async def process_owner_request_submit(
+    access_token: str, 
+    msisdn: str, 
+    process_id: str, 
+    action: str, 
+    comment: Optional[str] = None
+):
     """Send process owner request and submit"""
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
     
-    process_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        "?filter=processOwnerRequestAndSubmit"
+    )
     
     payload = {
         "action": action
@@ -267,7 +276,8 @@ async def process_owner_request_submit(access_token: str, msisdn: str, process_i
         payload["comment"] = comment
     
     try:
-        response = requests.post(process_url, json=payload, headers=headers)
+        # Changed from POST to PUT
+        response = requests.put(process_url, json=payload, headers=headers)
         if response.status_code in [200, 201, 202]:
             return {
                 "status": "success",
@@ -289,7 +299,7 @@ async def process_owner_request_submit(access_token: str, msisdn: str, process_i
             detail=f"Error during process {action}: {str(e)}"
         )
 
-@router.post("/api/v1/subscriber/{msisdn}/process/{process_id}")
+@router.put("/api/v1/subscriber/{msisdn}/process/{process_id}")
 async def process_owner_request_and_submit(
     msisdn: str,
     process_id: str,
