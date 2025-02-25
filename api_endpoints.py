@@ -264,23 +264,36 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
+    # First get the template content for this process
+    template_content = await get_template_content(
+        access_token, 
+        "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c"  # Using the same template ID
+    )
+    
     process_url = (
         f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
         "?filter=processOwnerRequestAndSubmit"
     )
     
-    # Simplified payload without Template and Values
+    # Using the same structure as create_process
+    metadata = {
+        "Label": f"Process {process_id}",
+        "Priority": 2,
+        "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",
+        "TemplateLabel": "Test Process",
+        "TemplateVersion": 34,
+        "Recipients": [{"Msisdn": msisdn}],
+        "Timezone": "America/Chicago"
+    }
+    
     payload = {
         "Action": action,
-        "Metadata": {
-            "Recipients": [{"Msisdn": msisdn}],
-            "Priority": 2,
-            "Timezone": "America/Chicago",
-            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",
-            "TemplateLabel": "Test Process",
-            "TemplateVersion": 34
-        }
+        "Template": json.dumps(template_content),
+        "Metadata": metadata,
+        "Values": json.dumps({}),  # Empty values
+        "UseRawValues": True
     }
+    
     if comment:
         payload["Comment"] = comment
     
@@ -299,7 +312,7 @@ async def process_owner_request_submit(
                     "process_id": process_id,
                     "msisdn": msisdn,
                     "action": action,
-                    "template_id": payload["Metadata"]["TemplateId"]
+                    "template_id": metadata["TemplateId"]
                 },
                 "api_response": response.json()
             }
