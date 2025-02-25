@@ -264,50 +264,37 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
-    # First, get the process details to get the correct template info
-    process_details_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-    try:
-        details_response = requests.get(process_details_url, headers=headers)
-        if details_response.status_code != 200:
-            raise HTTPException(
-                status_code=details_response.status_code,
-                detail=f"Failed to get process details: {details_response.text}"
-            )
-        
-        process_details = details_response.json()
-        template_id = process_details.get("results", {}).get("TemplateId")
-        template_version = process_details.get("results", {}).get("TemplateVersion", 34)
-        
-        process_url = (
-            f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
-        )
-
-        print(process_url,"==================This is Process url========================")
-        
-        # Updated payload structure
-        payload = {
-            "Action": action,
-            "Metadata": {
-                "Recipients": [{"Msisdn": msisdn}],
-                "Priority": 2,
-                "Timezone": "America/Chicago",
-                "TemplateId": template_id,
-                "TemplateVersion": template_version,
-                "TemplateLabel": process_details.get("results", {}).get("Label", "Test Process")
-            }
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
+    )
+    print(process_url,"-------------------- This is process url --------------------------")
+    # Simplified payload structure with minimal required fields
+    payload = {
+        "Action": action,
+        "Metadata": {
+            "Recipients": [{"Msisdn": msisdn}],
+            "Priority": 2,
+            "Timezone": "America/Chicago"
         }
-        if comment:
-            payload["Comment"] = comment
+    }
+    if comment:
+        payload["Comment"] = comment
+    
+    try:
+        print(f"Making request to: {process_url}")
+        print(f"With payload: {payload}")
         
         response = requests.put(process_url, json=payload, headers=headers)
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+        
         if response.status_code in [200, 201, 202]:
             return {
                 "status": "success",
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action,
-                    "template_id": template_id
+                    "action": action
                 },
                 "api_response": response.json()
             }
