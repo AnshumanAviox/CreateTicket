@@ -265,17 +265,24 @@ async def process_owner_request_submit(
     }
     
     process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}?filter=processOwnerRequestAndSubmit"
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        "?filter=processOwnerRequestAndSubmit"
     )
-    print(process_url,"-------------------- This is process url --------------------------")
-    # Simplified payload structure with minimal required fields
+    
+    # Using the same template info as in create_process
     payload = {
         "Action": action,
         "Metadata": {
             "Recipients": [{"Msisdn": msisdn}],
             "Priority": 2,
-            "Timezone": "America/Chicago"
-        }
+            "Timezone": "America/Chicago",
+            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",  # Using the template ID from create_process
+            "TemplateLabel": "Test Process",
+            "TemplateVersion": 34
+        },
+        "Template": {},  # Empty template object
+        "Values": {},    # Empty values object
+        "UseRawValues": True
     }
     if comment:
         payload["Comment"] = comment
@@ -294,7 +301,8 @@ async def process_owner_request_submit(
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action
+                    "action": action,
+                    "template_id": payload["Metadata"]["TemplateId"]
                 },
                 "api_response": response.json()
             }
