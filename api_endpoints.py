@@ -264,30 +264,48 @@ async def process_owner_request_submit(
         "Content-Type": "application/json"
     }
     
-    process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-        "?filter=processOwnerRequestAndSubmit"
-    )
-    
-    # Include required metadata in the payload
-    payload = {
-        "Action": action,
-        "Metadata": {
-            "Label": f"Process {process_id}",  # You can customize this label
-            "Priority": 2,
-            "Recipients": [{"Msisdn": msisdn}],
-            "Timezone": "America/Chicago"
-        }
-    }
-    
-    if comment:
-        payload["Comment"] = comment
+    # First, get the process details to get the template ID
+    process_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
     
     try:
-        print(f"Making request to: {process_url}")
+        # Get process details
+        process_response = requests.get(process_url, headers=headers)
+        if process_response.status_code != 200:
+            raise HTTPException(
+                status_code=process_response.status_code,
+                detail=f"Failed to get process details: {process_response.text}"
+            )
+        
+        process_data = process_response.json()
+        template_id = process_data.get("results", {}).get("TemplateId")
+        
+        if not template_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not find template ID in process details"
+            )
+        
+        # Now submit the process with complete metadata
+        submit_url = f"{process_url}?filter=processOwnerRequestAndSubmit"
+        
+        payload = {
+            "Action": action,
+            "Metadata": {
+                "Label": f"Process {process_id}",
+                "Priority": 2,
+                "Recipients": [{"Msisdn": msisdn}],
+                "Timezone": "America/Chicago",
+                "TemplateId": template_id
+            }
+        }
+        
+        if comment:
+            payload["Comment"] = comment
+        
+        print(f"Making request to: {submit_url}")
         print(f"With payload: {payload}")
         
-        response = requests.put(process_url, json=payload, headers=headers)
+        response = requests.put(submit_url, json=payload, headers=headers)
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
         
@@ -297,7 +315,8 @@ async def process_owner_request_submit(
                 "process": {
                     "process_id": process_id,
                     "msisdn": msisdn,
-                    "action": action
+                    "action": action,
+                    "template_id": template_id
                 },
                 "api_response": response.json()
             }
@@ -306,6 +325,8 @@ async def process_owner_request_submit(
             status_code=response.status_code,
             detail=f"Failed to {action} process: {response.text}"
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
