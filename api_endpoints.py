@@ -165,7 +165,26 @@ async def create_process_request(access_token: str, msisdn: str, payload: dict):
     try:
         response = requests.post(process_url, json=payload, headers=headers)
         if response.status_code == 201:
-            return response.json()
+            # Extract the process ID from the response
+            process_id = response.json()["results"]["ProcessId"]
+            
+            # Create enhanced response with all the requested information
+            enhanced_response = {
+                "status": "success",
+                "process": {
+                    "process_id": process_id,
+                    "msisdn": msisdn,
+                    "template_id": payload["Metadata"]["TemplateId"],
+                    "ticket_id": payload["Metadata"]["Label"].split(" ")[1],  # Extract ticket_id from Label
+                },
+                "template": json.loads(payload["Template"]),  # Include the template
+                "values": json.loads(payload["Values"]),      # Include the values
+                "metadata": payload["Metadata"],              # Include the metadata
+                "api_response": response.json()               # Include original API response
+            }
+            
+            return enhanced_response
+            
         raise HTTPException(
             status_code=400,
             detail=f"Failed to create process: {response.text}"
@@ -242,13 +261,9 @@ async def process_owner_request_and_submit(
 ):
     """
     Submit/cancel/complete a process without explicitly requesting ownership
-    
-    Args:
-        process_id: ID of the process to act on
-        action: Action to perform (submit/cancel/complete) - as query parameter
-        msisdn: Subscriber's MSISDN - as query parameter
-        comment: Optional comment for the action
     """
+    print(f"Received request - Process ID: {process_id}, Action: {action}, MSISDN: {msisdn}")
+    
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
@@ -257,15 +272,20 @@ async def process_owner_request_and_submit(
     base_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
     process_url = f"{base_url}?filter=processOwnerRequestAndSubmit"
     
+    print(f"Making request to: {process_url}")
+    
     payload = {
         "action": action.value
     }
-    
     if comment:
         payload["comment"] = comment
+        
+    print(f"With payload: {payload}")
     
     try:
         response = requests.post(process_url, json=payload, headers=headers)
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
         
         if response.status_code in [200, 201, 202]:
             return {
