@@ -269,20 +269,17 @@ async def process_owner_request_submit(
         "?filter=processOwnerRequestAndSubmit"
     )
     
-    # Using the same template info as in create_process
+    # Simplified payload without Template and Values
     payload = {
         "Action": action,
         "Metadata": {
             "Recipients": [{"Msisdn": msisdn}],
             "Priority": 2,
             "Timezone": "America/Chicago",
-            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",  # Using the template ID from create_process
+            "TemplateId": "b55c87eb-6fc2-4830-8f6f-1c5aaeeb7a2c",
             "TemplateLabel": "Test Process",
             "TemplateVersion": 34
-        },
-        "Template": {},  # Empty template object
-        "Values": {},    # Empty values object
-        "UseRawValues": True
+        }
     }
     if comment:
         payload["Comment"] = comment
