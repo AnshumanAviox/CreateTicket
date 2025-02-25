@@ -269,9 +269,15 @@ async def process_owner_request_submit(
         "?filter=processOwnerRequestAndSubmit"
     )
     
-    # Simplified payload - only sending the action
+    # Include required metadata in the payload
     payload = {
-        "Action": action
+        "Action": action,
+        "Metadata": {
+            "Label": f"Process {process_id}",  # You can customize this label
+            "Priority": 2,
+            "Recipients": [{"Msisdn": msisdn}],
+            "Timezone": "America/Chicago"
+        }
     }
     
     if comment:
