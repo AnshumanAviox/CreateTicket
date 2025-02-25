@@ -1,6 +1,6 @@
 # api_endpoints.py
 from auth import token_manager, get_access_token, clear_token_cache
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 import json
 import requests
 from models import (
@@ -232,21 +232,21 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
         cursor.close()
         conn.close()
 
-@router.post("/process/{process_id}/{action}")
+@router.post("/process/{process_id}")
 async def process_owner_request_and_submit(
     process_id: str,
-    action: ProcessAction,
-    msisdn: str,
+    action: ProcessAction = Query(..., description="Action to perform (submit/cancel/complete)"),
+    msisdn: str = Query(..., description="Subscriber's MSISDN"),
     access_token: str = Depends(get_access_token),
-    comment: Optional[str] = None
+    comment: Optional[str] = Query(None, description="Optional comment for the action")
 ):
     """
     Submit/cancel/complete a process without explicitly requesting ownership
     
     Args:
         process_id: ID of the process to act on
-        action: Action to perform (submit/cancel/complete)
-        msisdn: Subscriber's MSISDN
+        action: Action to perform (submit/cancel/complete) - as query parameter
+        msisdn: Subscriber's MSISDN - as query parameter
         comment: Optional comment for the action
     """
     headers = {
@@ -254,18 +254,13 @@ async def process_owner_request_and_submit(
         "Content-Type": "application/json"
     }
     
-    # Construct the URL with the processOwnerRequestAndSubmit filter
-    process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-        "?filter=processOwnerRequestAndSubmit"
-    )
+    base_url = f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+    process_url = f"{base_url}?filter=processOwnerRequestAndSubmit"
     
-    # Prepare the payload based on the action
     payload = {
         "action": action.value
     }
     
-    # Add comment if provided
     if comment:
         payload["comment"] = comment
     
