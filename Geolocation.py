@@ -72,9 +72,15 @@ def get_geo_locations(access_token, group_id):
         
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            print("\nGeolocation API Response:")
+            print(f"Number of records received: {len(data)}")
+            print(f"Sample record: {json.dumps(data[0], indent=2)}\n")
+            return data
         else:
             logger.error(f"Failed to fetch geo location data: {response.status_code} - {response.text}")
+            print(f"\nError getting geolocation data: {response.status_code}")
+            print(f"Response: {response.text}\n")
             return None
     except Exception as e:
         logger.error(f"Exception during geo location data retrieval: {str(e)}")
@@ -106,6 +112,8 @@ def insert_location_data(location_data):
         
         # Process each location record
         for record in location_data:
+            print(f"\nProcessing record for MSISDN: {record.get('Msisdn')}")
+            
             # Extract base fields
             msisdn = record.get('Msisdn')
             subscriber_data_status = record.get('SubscriberDataStatus')
@@ -127,6 +135,7 @@ def insert_location_data(location_data):
             home_network_identity_date = parse_datetime(subscriber_data.get('HomeNetworkIdentityDate'))
             
             if exists:
+                print(f"Updating existing record for MSISDN: {msisdn}")
                 # Update existing record
                 update_query = f"""
                 UPDATE {DB_TABLE} SET
@@ -176,6 +185,7 @@ def insert_location_data(location_data):
                 )
                 records_updated += 1
             else:
+                print(f"Inserting new record for MSISDN: {msisdn}")
                 # Insert new record
                 insert_query = f"""
                 INSERT INTO {DB_TABLE} (
@@ -228,7 +238,10 @@ def insert_location_data(location_data):
         
         # Commit the transaction
         conn.commit()
-        logger.info(f"Successfully processed {len(location_data)} records: {records_inserted} inserted, {records_updated} updated")
+        print(f"\nDatabase Operation Summary:")
+        print(f"Total records processed: {len(location_data)}")
+        print(f"Records inserted: {records_inserted}")
+        print(f"Records updated: {records_updated}\n")
         
     except Exception as e:
         logger.error(f"Database error: {str(e)}")
@@ -243,10 +256,14 @@ def insert_location_data(location_data):
 def main():
     """Main execution function."""
     try:
+        print("\n=== Starting GPS Location Data Collection ===\n")
+        
         # Get access token
         logger.info("Starting GPS location data collection")
         access_token = get_access_token()
-        if not access_token:
+        if access_token:
+            print("Successfully obtained access token")
+        else:
             logger.error("Failed to obtain access token. Exiting.")
             sys.exit(1)
         
@@ -262,7 +279,7 @@ def main():
         # Insert data into database
         insert_location_data(location_data)
         
-        logger.info("Script completed successfully")
+        print("\n=== Script Execution Completed ===\n")
         
     except Exception as e:
         logger.error(f"Unhandled exception: {str(e)}")
