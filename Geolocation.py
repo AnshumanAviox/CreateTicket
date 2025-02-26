@@ -42,6 +42,22 @@ def get_access_token():
         url = f"{API_BASE_URL}/oauth/token"
         print("\n=== Getting Access Token ===")
         print(f"Making request to: {url}")
+        
+        # Define payload and headers
+        payload = {
+            "grant_type": "password",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "username": USERNAME,
+            "password": PASSWORD,
+            "token_type": TOKEN_TYPE,
+            "scope": SCOPE
+        }
+        
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        
         print("Payload:", {
             "grant_type": "password",
             "client_id": CLIENT_ID,
