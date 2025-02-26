@@ -6,17 +6,17 @@ To be run as a cron job: TZ=America/Chicago/5 5-17 * 1-5 /path/to/this/script.py
 import requests
 import pyodbc
 import json
-import logging
+# import logging
 import sys
 from datetime import datetime
 
 # Set up logging
-logging.basicConfig(
-    filename='/var/log/geo_location_data.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('geo_location_script')
+# logging.basicConfig(
+#     filename='/var/log/geo_location_data.log',
+#     level=logging.INFO,
+#     format='%(asctime)s - %(levelname)s - %(message)s'
+# )
+# logger = logging.getLogger('geo_location_script')
 
 # API Configuration
 API_BASE_URL = "https://swapi.teamontherun.com"
@@ -55,10 +55,10 @@ def get_access_token():
         if response.status_code == 200:
             return response.json().get('access_token')
         else:
-            logger.error(f"Failed to get access token: {response.status_code} - {response.text}")
+            # logger.error(f"Failed to get access token: {response.status_code} - {response.text}")
             return None
     except Exception as e:
-        logger.error(f"Exception during token retrieval: {str(e)}")
+        # logger.error(f"Exception during token retrieval: {str(e)}")
         return None
 
 def get_geo_locations(access_token, group_id):
@@ -78,12 +78,12 @@ def get_geo_locations(access_token, group_id):
             print(f"Sample record: {json.dumps(data[0], indent=2)}\n")
             return data
         else:
-            logger.error(f"Failed to fetch geo location data: {response.status_code} - {response.text}")
+            # logger.error(f"Failed to fetch geo location data: {response.status_code} - {response.text}")
             print(f"\nError getting geolocation data: {response.status_code}")
             print(f"Response: {response.text}\n")
             return None
     except Exception as e:
-        logger.error(f"Exception during geo location data retrieval: {str(e)}")
+        # logger.error(f"Exception during geo location data retrieval: {str(e)}")
         return None
 
 def parse_datetime(date_str):
@@ -94,7 +94,7 @@ def parse_datetime(date_str):
         # Format: '20250225T21:54:47'
         return datetime.strptime(date_str, '%Y%m%dT%H:%M:%S')
     except ValueError:
-        logger.warning(f"Failed to parse datetime: {date_str}")
+        # logger.warning(f"Failed to parse datetime: {date_str}")
         return None
 
 def insert_location_data(location_data):
@@ -244,7 +244,7 @@ def insert_location_data(location_data):
         print(f"Records updated: {records_updated}\n")
         
     except Exception as e:
-        logger.error(f"Database error: {str(e)}")
+        # logger.error(f"Database error: {str(e)}")
         if conn:
             conn.rollback()
     finally:
@@ -255,35 +255,35 @@ def insert_location_data(location_data):
 
 def main():
     """Main execution function."""
-    try:
-        print("\n=== Starting GPS Location Data Collection ===\n")
+    # try:
+    #     print("\n=== Starting GPS Location Data Collection ===\n")
         
-        # Get access token
-        logger.info("Starting GPS location data collection")
-        access_token = get_access_token()
-        if access_token:
-            print("Successfully obtained access token")
-        else:
-            logger.error("Failed to obtain access token. Exiting.")
-            sys.exit(1)
-        
-        # Get geo location data
-        logger.info(f"Getting location data for group ID: {GROUP_ID}")
-        location_data = get_geo_locations(access_token, GROUP_ID)
-        if not location_data:
-            logger.error("Failed to retrieve geo location data. Exiting.")
-            sys.exit(1)
-        
-        logger.info(f"Retrieved {len(location_data)} location records")
-        
-        # Insert data into database
-        insert_location_data(location_data)
-        
-        print("\n=== Script Execution Completed ===\n")
-        
-    except Exception as e:
-        logger.error(f"Unhandled exception: {str(e)}")
+    # Get access token
+    # logger.info("Starting GPS location data collection")
+    access_token = get_access_token()
+    if access_token:
+        print("Successfully obtained access token")
+    else:
+        # logger.error("Failed to obtain access token. Exiting.")
         sys.exit(1)
+    
+    # Get geo location data
+    # logger.info(f"Getting location data for group ID: {GROUP_ID}")
+    location_data = get_geo_locations(access_token, GROUP_ID)
+    if not location_data:
+        # logger.error("Failed to retrieve geo location data. Exiting.")
+        sys.exit(1)
+    
+    # logger.info(f"Retrieved {len(location_data)} location records")
+    
+    # Insert data into database
+    insert_location_data(location_data)
+    
+    print("\n=== Script Execution Completed ===\n")
+        
+    # except Exception as e:
+    #     # logger.error(f"Unhandled exception: {str(e)}")
+    #     sys.exit(1)
 
 if __name__ == "__main__":
     main()
