@@ -40,50 +40,75 @@ def get_access_token():
     """Get access token from the Team on the Run API."""
     try:
         url = f"{API_BASE_URL}/oauth/token"
-        payload = {
+        print("\n=== Getting Access Token ===")
+        print(f"Making request to: {url}")
+        print("Payload:", {
             "grant_type": "password",
             "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
+            "client_secret": "***hidden***",
             "username": USERNAME,
-            "password": PASSWORD,
+            "password": "***hidden***",
             "token_type": TOKEN_TYPE,
             "scope": SCOPE
-        }
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        })
         
         response = requests.post(url, data=payload, headers=headers)
+        print(f"Response status code: {response.status_code}")
+        
         if response.status_code == 200:
-            return response.json().get('access_token')
+            token = response.json().get('access_token')
+            print("Access token obtained successfully")
+            print(f"Token (first 10 chars): {token[:10]}...")
+            return token
         else:
-            # logger.error(f"Failed to get access token: {response.status_code} - {response.text}")
+            print(f"Failed to get token. Response: {response.text}")
             return None
     except Exception as e:
-        # logger.error(f"Exception during token retrieval: {str(e)}")
+        print(f"Exception during token retrieval: {str(e)}")
         return None
 
 def get_geo_locations(access_token, group_id):
     """Fetch geo location data for a specific group."""
     try:
         url = f"{API_BASE_URL}/api/v1/organization/group/{group_id}/lastgeolocationdata?Offset=0&Records=500"
+        print("\n=== Getting Geolocation Data ===")
+        print(f"Making request to: {url}")
+        print(f"Using group_id: {group_id}")
+        
         headers = {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json"
         }
+        print("Headers:", {
+            "Authorization": f"Bearer {access_token[:10]}...",
+            "Content-Type": "application/json"
+        })
         
         response = requests.get(url, headers=headers)
+        print(f"Response status code: {response.status_code}")
+        
         if response.status_code == 200:
             data = response.json()
-            print("\nGeolocation API Response:")
+            print("\nGeolocation API Response Summary:")
             print(f"Number of records received: {len(data)}")
-            print(f"Sample record: {json.dumps(data[0], indent=2)}\n")
+            print("\nFirst record details:")
+            first_record = data[0] if data else None
+            if first_record:
+                print(f"MSISDN: {first_record.get('Msisdn')}")
+                print(f"Status: {first_record.get('SubscriberDataStatus')}")
+                print(f"Geolocation Activated: {first_record.get('GeolocationActivated')}")
+                print("\nSubscriber Data Sample:")
+                subscriber_data = first_record.get('SubscriberData', {})
+                print(f"Latitude: {subscriber_data.get('GeolocationLatitude')}")
+                print(f"Longitude: {subscriber_data.get('GeolocationLongitude')}")
+                print(f"Address: {subscriber_data.get('GeolocationAddress')}")
             return data
         else:
-            # logger.error(f"Failed to fetch geo location data: {response.status_code} - {response.text}")
             print(f"\nError getting geolocation data: {response.status_code}")
             print(f"Response: {response.text}\n")
             return None
     except Exception as e:
-        # logger.error(f"Exception during geo location data retrieval: {str(e)}")
+        print(f"Exception during geo location data retrieval: {str(e)}")
         return None
 
 def parse_datetime(date_str):
@@ -102,188 +127,199 @@ def insert_location_data(location_data):
     conn = None
     cursor = None
     try:
-        # Connect to the database
-        conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={DB_SERVER},{DB_PORT};DATABASE={DB_NAME};UID={DB_USERNAME};PWD={DB_PASSWORD}'
+        print("\n=== Database Operations ===")
+        print("Attempting database connection...")
+        conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={DB_SERVER},{DB_PORT};DATABASE={DB_NAME};UID={DB_USERNAME};PWD=***hidden***'
+        print(f"Connection string (masked): {conn_str.replace(DB_PASSWORD, '***hidden***')}")
+        
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
+        print("Database connection successful")
         
         records_updated = 0
         records_inserted = 0
+        records_failed = 0
         
-        # Process each location record
-        for record in location_data:
-            print(f"\nProcessing record for MSISDN: {record.get('Msisdn')}")
-            
-            # Extract base fields
-            msisdn = record.get('Msisdn')
-            subscriber_data_status = record.get('SubscriberDataStatus')
-            geolocation_activated = 1 if record.get('GeolocationActivated') else 0
-            geolocation_device_status = 1 if record.get('GeolocationDeviceStatus') else 0
-            subscriber_data_date = parse_datetime(record.get('SubscriberDataDate'))
-            
-            # Extract nested subscriber data
-            subscriber_data = record.get('SubscriberData', {})
-            
-            # Query to check if record exists
-            check_query = f"SELECT Msisdn FROM {DB_TABLE} WHERE Msisdn = ?"
-            cursor.execute(check_query, (msisdn,))
-            exists = cursor.fetchone()
-            
-            # Parse dates from subscriber data
-            battery_date = parse_datetime(subscriber_data.get('BatteryDate'))
-            network_date = parse_datetime(subscriber_data.get('NetworkDate'))
-            home_network_identity_date = parse_datetime(subscriber_data.get('HomeNetworkIdentityDate'))
-            
-            if exists:
-                print(f"Updating existing record for MSISDN: {msisdn}")
-                # Update existing record
-                update_query = f"""
-                UPDATE {DB_TABLE} SET
-                    SubscriberDataStatus = ?,
-                    GeolocationActivated = ?,
-                    GeolocationDeviceStatus = ?,
-                    SubscriberDataDate = ?,
-                    GeolocationLatitude = ?,
-                    GeolocationLongitude = ?,
-                    GeolocationAccuracy = ?,
-                    GeolocationAddress = ?,
-                    GeolocationSpeed = ?,
-                    BatteryLevel = ?,
-                    BatteryDate = ?,
-                    SignalStrength = ?,
-                    NetworkType = ?,
-                    NetworkDate = ?,
-                    MobileCountryCode = ?,
-                    MobileNetworkCode = ?,
-                    HomeNetworkIdentityDate = ?,
-                    DeviceType = ?
-                WHERE Msisdn = ?
-                """
-                cursor.execute(
-                    update_query,
-                    (
-                        subscriber_data_status,
-                        geolocation_activated,
-                        geolocation_device_status,
-                        subscriber_data_date,
-                        subscriber_data.get('GeolocationLatitude'),
-                        subscriber_data.get('GeolocationLongitude'),
-                        subscriber_data.get('GeolocationAccuracy'),
-                        subscriber_data.get('GeolocationAddress'),
-                        subscriber_data.get('GeolocationSpeed'),
-                        subscriber_data.get('BatteryLevel'),
-                        battery_date,
-                        subscriber_data.get('SignalStrength'),
-                        subscriber_data.get('NetworkType'),
-                        network_date,
-                        subscriber_data.get('MobileCountryCode'),
-                        subscriber_data.get('MobileNetworkCode'),
-                        home_network_identity_date,
-                        subscriber_data.get('DeviceType'),
-                        msisdn
+        total_records = len(location_data)
+        print(f"\nProcessing {total_records} records...")
+        
+        for index, record in enumerate(location_data, 1):
+            try:
+                msisdn = record.get('Msisdn')
+                print(f"\nProcessing record {index}/{total_records}")
+                print(f"MSISDN: {msisdn}")
+                
+                # Extract and print key data points
+                subscriber_data = record.get('SubscriberData', {})
+                print("Key data points:")
+                print(f"- Status: {record.get('SubscriberDataStatus')}")
+                print(f"- Location: {subscriber_data.get('GeolocationLatitude')}, {subscriber_data.get('GeolocationLongitude')}")
+                print(f"- Address: {subscriber_data.get('GeolocationAddress')}")
+                
+                # Check if record exists
+                check_query = f"SELECT Msisdn FROM {DB_TABLE} WHERE Msisdn = ?"
+                cursor.execute(check_query, (msisdn,))
+                exists = cursor.fetchone()
+                
+                if exists:
+                    print(f"Updating existing record...")
+                    # Update existing record
+                    update_query = f"""
+                    UPDATE {DB_TABLE} SET
+                        SubscriberDataStatus = ?,
+                        GeolocationActivated = ?,
+                        GeolocationDeviceStatus = ?,
+                        SubscriberDataDate = ?,
+                        GeolocationLatitude = ?,
+                        GeolocationLongitude = ?,
+                        GeolocationAccuracy = ?,
+                        GeolocationAddress = ?,
+                        GeolocationSpeed = ?,
+                        BatteryLevel = ?,
+                        BatteryDate = ?,
+                        SignalStrength = ?,
+                        NetworkType = ?,
+                        NetworkDate = ?,
+                        MobileCountryCode = ?,
+                        MobileNetworkCode = ?,
+                        HomeNetworkIdentityDate = ?,
+                        DeviceType = ?
+                    WHERE Msisdn = ?
+                    """
+                    cursor.execute(
+                        update_query,
+                        (
+                            record.get('SubscriberDataStatus'),
+                            record.get('GeolocationActivated'),
+                            record.get('GeolocationDeviceStatus'),
+                            parse_datetime(record.get('SubscriberDataDate')),
+                            subscriber_data.get('GeolocationLatitude'),
+                            subscriber_data.get('GeolocationLongitude'),
+                            subscriber_data.get('GeolocationAccuracy'),
+                            subscriber_data.get('GeolocationAddress'),
+                            subscriber_data.get('GeolocationSpeed'),
+                            subscriber_data.get('BatteryLevel'),
+                            parse_datetime(subscriber_data.get('BatteryDate')),
+                            subscriber_data.get('SignalStrength'),
+                            subscriber_data.get('NetworkType'),
+                            parse_datetime(subscriber_data.get('NetworkDate')),
+                            subscriber_data.get('MobileCountryCode'),
+                            subscriber_data.get('MobileNetworkCode'),
+                            parse_datetime(subscriber_data.get('HomeNetworkIdentityDate')),
+                            subscriber_data.get('DeviceType'),
+                            msisdn
+                        )
                     )
-                )
-                records_updated += 1
-            else:
-                print(f"Inserting new record for MSISDN: {msisdn}")
-                # Insert new record
-                insert_query = f"""
-                INSERT INTO {DB_TABLE} (
-                    Msisdn,
-                    SubscriberDataStatus,
-                    GeolocationActivated,
-                    GeolocationDeviceStatus,
-                    SubscriberDataDate,
-                    GeolocationLatitude,
-                    GeolocationLongitude,
-                    GeolocationAccuracy,
-                    GeolocationAddress,
-                    GeolocationSpeed,
-                    BatteryLevel,
-                    BatteryDate,
-                    SignalStrength,
-                    NetworkType,
-                    NetworkDate,
-                    MobileCountryCode,
-                    MobileNetworkCode,
-                    HomeNetworkIdentityDate,
-                    DeviceType
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """
-                cursor.execute(
-                    insert_query,
-                    (
-                        msisdn,
-                        subscriber_data_status,
-                        geolocation_activated,
-                        geolocation_device_status,
-                        subscriber_data_date,
-                        subscriber_data.get('GeolocationLatitude'),
-                        subscriber_data.get('GeolocationLongitude'),
-                        subscriber_data.get('GeolocationAccuracy'),
-                        subscriber_data.get('GeolocationAddress'),
-                        subscriber_data.get('GeolocationSpeed'),
-                        subscriber_data.get('BatteryLevel'),
-                        battery_date,
-                        subscriber_data.get('SignalStrength'),
-                        subscriber_data.get('NetworkType'),
-                        network_date,
-                        subscriber_data.get('MobileCountryCode'),
-                        subscriber_data.get('MobileNetworkCode'),
-                        home_network_identity_date,
-                        subscriber_data.get('DeviceType')
+                    records_updated += 1
+                    print("Update successful")
+                else:
+                    print(f"Inserting new record...")
+                    # Insert new record
+                    insert_query = f"""
+                    INSERT INTO {DB_TABLE} (
+                        Msisdn,
+                        SubscriberDataStatus,
+                        GeolocationActivated,
+                        GeolocationDeviceStatus,
+                        SubscriberDataDate,
+                        GeolocationLatitude,
+                        GeolocationLongitude,
+                        GeolocationAccuracy,
+                        GeolocationAddress,
+                        GeolocationSpeed,
+                        BatteryLevel,
+                        BatteryDate,
+                        SignalStrength,
+                        NetworkType,
+                        NetworkDate,
+                        MobileCountryCode,
+                        MobileNetworkCode,
+                        HomeNetworkIdentityDate,
+                        DeviceType
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """
+                    cursor.execute(
+                        insert_query,
+                        (
+                            msisdn,
+                            record.get('SubscriberDataStatus'),
+                            record.get('GeolocationActivated'),
+                            record.get('GeolocationDeviceStatus'),
+                            parse_datetime(record.get('SubscriberDataDate')),
+                            subscriber_data.get('GeolocationLatitude'),
+                            subscriber_data.get('GeolocationLongitude'),
+                            subscriber_data.get('GeolocationAccuracy'),
+                            subscriber_data.get('GeolocationAddress'),
+                            subscriber_data.get('GeolocationSpeed'),
+                            subscriber_data.get('BatteryLevel'),
+                            parse_datetime(subscriber_data.get('BatteryDate')),
+                            subscriber_data.get('SignalStrength'),
+                            subscriber_data.get('NetworkType'),
+                            parse_datetime(subscriber_data.get('NetworkDate')),
+                            subscriber_data.get('MobileCountryCode'),
+                            subscriber_data.get('MobileNetworkCode'),
+                            parse_datetime(subscriber_data.get('HomeNetworkIdentityDate')),
+                            subscriber_data.get('DeviceType')
+                        )
                     )
-                )
-                records_inserted += 1
+                    records_inserted += 1
+                    print("Insert successful")
+                
+            except Exception as e:
+                records_failed += 1
+                print(f"Failed to process record: {str(e)}")
+                continue
         
         # Commit the transaction
         conn.commit()
-        print(f"\nDatabase Operation Summary:")
-        print(f"Total records processed: {len(location_data)}")
-        print(f"Records inserted: {records_inserted}")
-        print(f"Records updated: {records_updated}\n")
+        print("\n=== Database Operation Summary ===")
+        print(f"Total records processed: {total_records}")
+        print(f"Successfully inserted: {records_inserted}")
+        print(f"Successfully updated: {records_updated}")
+        print(f"Failed to process: {records_failed}")
         
     except Exception as e:
-        # logger.error(f"Database error: {str(e)}")
+        print(f"\nDatabase error: {str(e)}")
         if conn:
             conn.rollback()
+            print("Transaction rolled back")
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
+        print("Database connection closed")
 
 def main():
     """Main execution function."""
-    # try:
-    #     print("\n=== Starting GPS Location Data Collection ===\n")
-        
+    print("\n====== Starting GPS Location Data Collection ======")
+    print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"API URL: {API_BASE_URL}")
+    print(f"Group ID: {GROUP_ID}")
+    
     # Get access token
-    # logger.info("Starting GPS location data collection")
+    print("\nStep 1: Getting access token...")
     access_token = get_access_token()
     if access_token:
-        print("Successfully obtained access token")
+        print("✓ Access token obtained successfully")
     else:
-        # logger.error("Failed to obtain access token. Exiting.")
+        print("✗ Failed to obtain access token")
         sys.exit(1)
     
     # Get geo location data
-    # logger.info(f"Getting location data for group ID: {GROUP_ID}")
+    print("\nStep 2: Fetching location data...")
     location_data = get_geo_locations(access_token, GROUP_ID)
     if not location_data:
-        # logger.error("Failed to retrieve geo location data. Exiting.")
+        print("✗ Failed to retrieve geo location data")
         sys.exit(1)
-    
-    # logger.info(f"Retrieved {len(location_data)} location records")
+    print(f"✓ Successfully retrieved {len(location_data)} location records")
     
     # Insert data into database
+    print("\nStep 3: Processing database operations...")
     insert_location_data(location_data)
     
-    print("\n=== Script Execution Completed ===\n")
-        
-    # except Exception as e:
-    #     # logger.error(f"Unhandled exception: {str(e)}")
-    #     sys.exit(1)
+    print("\n====== Script Execution Completed ======")
+    print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 if __name__ == "__main__":
     main()
