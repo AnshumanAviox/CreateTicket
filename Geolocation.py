@@ -18,26 +18,26 @@ GROUP_ID = "14926"
 def get_access_token():
     """Get access token from the Team on the Run API."""
     try:
-        url = f"{API_BASE_URL}/oauth/token"
+        url = f"{API_BASE_URL}/request/token"
         print("\n=== Getting Access Token ===")
         print(f"Making request to: {url}")
         
         payload = {
-            "grant_type": "password",
+            "grant_type": "authorization_credentials",
+            "token_type": TOKEN_TYPE,
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "username": USERNAME,
             "password": PASSWORD,
-            "token_type": TOKEN_TYPE,
             "scope": SCOPE
         }
         
         headers = {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/json"
         }
         
         print("Attempting to get access token...")
-        response = requests.post(url, data=payload, headers=headers)
+        response = requests.post(url, json=payload, verify=False)
         print(f"Response status code: {response.status_code}")
         
         if response.status_code == 200:
