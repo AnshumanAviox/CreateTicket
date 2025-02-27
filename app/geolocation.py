@@ -9,7 +9,8 @@ class GeolocationService:
     def get_access_token():
         """Get access token from the Team on the Run API."""
         try:
-            url = f"{settings.API_BASE_URL}/request/token"
+            url = settings.api_token_url
+            print(f"Requesting token from: {url}")  # Debug log
             
             payload = {
                 "grant_type": "authorization_credentials",
@@ -21,10 +22,16 @@ class GeolocationService:
                 "scope": settings.SCOPE
             }
             
+            print("Payload:", {k: v for k, v in payload.items() if k != 'password'})  # Debug log (excluding password)
+            
             response = requests.post(url, json=payload, verify=False)
+            print(f"Response status: {response.status_code}")  # Debug log
             
             if response.status_code == 200:
-                return response.json().get('access_token')
+                token = response.json().get('access_token')
+                print("Token obtained successfully")  # Debug log
+                return token
+            print(f"Failed to get token. Response: {response.text}")  # Debug log
             return None
         except Exception as e:
             print(f"Token retrieval error: {str(e)}")

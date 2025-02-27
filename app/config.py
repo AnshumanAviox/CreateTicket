@@ -18,13 +18,17 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "h77pc0l0"
     DB_PORT: str = "1433"
 
-    # Add these new fields that are causing the error
+    # Optional fields
     msisdn: str | None = None
     database_url: str | None = None
 
     class Config:
         env_file = ".env"
-        # Allow extra fields to be ignored
         extra = "ignore"
+
+    @property
+    def api_token_url(self) -> str:
+        """Get the complete token URL"""
+        return f"{self.API_BASE_URL}/request/token"
 
 settings = Settings() 
