@@ -1,6 +1,6 @@
 # Broker settings
-broker_url = 'redis://localhost:6379/0'
-result_backend = 'redis://localhost:6379/0'
+broker_url = 'redis://35.88.94.48:6379/0'
+result_backend = 'redis://35.88.94.48:6379/0'
 
 # Task settings
 task_serializer = 'json'
