@@ -4,6 +4,8 @@ Script to fetch GPS location data from Team on the Run API.
 """
 import requests
 import json
+import pyodbc
+from datetime import datetime
 
 # API Configuration
 API_BASE_URL = "https://swapi.teamontherun.com"
@@ -14,6 +16,13 @@ PASSWORD = "Not4afish1234!"
 TOKEN_TYPE = "sw_organization_all_data"
 SCOPE = "processes provisioning"
 GROUP_ID = "14926"
+
+# Database Configuration
+DB_SERVER = "172.31.6.34"
+DB_NAME = "CHILI_PROD"
+DB_USER = "chiliadmin"
+DB_PASSWORD = "h77pc0l0"
+DB_PORT = "1433"
 
 def get_access_token():
     """Get access token from the Team on the Run API."""
@@ -78,6 +87,73 @@ def get_geo_locations(access_token, group_id):
         print(f"✗ Exception during geo location data retrieval: {str(e)}")
         return None
 
+def insert_location_data(location_data):
+    """Insert geolocation data into the database."""
+    try:
+        # Create connection string
+        conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={DB_SERVER},{DB_PORT};DATABASE={DB_NAME};UID={DB_USER};PWD={DB_PASSWORD}"
+        
+        # Establish connection
+        print("\n=== Inserting Data into Database ===")
+        print("Connecting to database...")
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        
+        # Parse the subscriber data
+        subscriber_data = location_data.get('SubscriberData', {})
+        
+        # Convert string dates to datetime objects
+        subscriber_date = datetime.strptime(location_data['SubscriberDataDate'], '%Y%m%dT%H:%M:%S')
+        battery_date = datetime.strptime(subscriber_data.get('BatteryDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('BatteryDate') else None
+        network_date = datetime.strptime(subscriber_data.get('NetworkDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('NetworkDate') else None
+        home_network_date = datetime.strptime(subscriber_data.get('HomeNetworkIdentityDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('HomeNetworkIdentityDate') else None
+        
+        # Prepare SQL query
+        sql = """
+        INSERT INTO [dbo].[GEOLOCATION_DATA] (
+            [Msisdn], [SubscriberDataStatus], [GeolocationActivated], [GeolocationDeviceStatus],
+            [SubscriberDataDate], [GeolocationLatitude], [GeolocationLongitude], [GeolocationAccuracy],
+            [GeolocationAddress], [GeolocationSpeed], [BatteryLevel], [BatteryDate],
+            [SignalStrength], [NetworkType], [NetworkDate], [MobileCountryCode],
+            [MobileNetworkCode], [HomeNetworkIdentityDate], [DeviceType]
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        # Prepare parameters
+        params = [
+            location_data['Msisdn'],
+            location_data['SubscriberDataStatus'],
+            1 if location_data['GeolocationActivated'] else 0,
+            1 if location_data['GeolocationDeviceStatus'] else 0,
+            subscriber_date,
+            subscriber_data.get('GeolocationLatitude'),
+            subscriber_data.get('GeolocationLongitude'),
+            subscriber_data.get('GeolocationAccuracy'),
+            subscriber_data.get('GeolocationAddress'),
+            subscriber_data.get('GeolocationSpeed'),
+            subscriber_data.get('BatteryLevel'),
+            battery_date,
+            subscriber_data.get('SignalStrength'),
+            subscriber_data.get('NetworkType'),
+            network_date,
+            subscriber_data.get('MobileCountryCode'),
+            subscriber_data.get('MobileNetworkCode'),
+            home_network_date,
+            subscriber_data.get('DeviceType')
+        ]
+        
+        # Execute query
+        cursor.execute(sql, params)
+        conn.commit()
+        print("✓ Successfully inserted data into database")
+        
+    except Exception as e:
+        print(f"✗ Database error: {str(e)}")
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
 def main():
     """Main execution function."""
     print("\n====== Starting GPS Location Data Collection ======")
@@ -99,6 +175,14 @@ def main():
     print(f"Number of records: {len(location_data)}")
     print("\nData in JSON format:")
     print(json.dumps(location_data, indent=2))
+    
+    # Insert data into database
+    try:
+        for record in location_data:
+            insert_location_data(record)
+        print("✓ All records successfully inserted into database")
+    except Exception as e:
+        print(f"✗ Failed to insert some records: {str(e)}")
 
 if __name__ == "__main__":
     main()
