@@ -22,7 +22,7 @@ class GeolocationService:
                 "scope": settings.SCOPE
             }
             
-            print("Payload:", {k: v for k, v in payload.items() if k != 'password'})  # Debug log (excluding password)
+            print("Payload:", {k: v for k, v in payload.items() if k != 'password'})  # Debug log
             
             response = requests.post(url, json=payload, verify=False)
             print(f"Response status: {response.status_code}")  # Debug log
@@ -72,11 +72,74 @@ class GeolocationService:
             conn = pyodbc.connect(conn_str)
             cursor = conn.cursor()
 
-            # Rest of your insert_location_data logic...
-            # (keeping the same logic as in your original code)
-            
+            # Parse the subscriber data
+            subscriber_data = location_data.get('SubscriberData', {})
+            if isinstance(subscriber_data, str):
+                subscriber_data = json.loads(subscriber_data)
+
+            # Convert string dates to datetime objects
+            try:
+                subscriber_date = datetime.strptime(location_data['SubscriberDataDate'], '%Y%m%dT%H:%M:%S')
+            except (KeyError, ValueError) as e:
+                print(f"Warning: Error parsing SubscriberDataDate: {e}")
+                subscriber_date = None
+
+            try:
+                battery_date = datetime.strptime(subscriber_data.get('BatteryDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('BatteryDate') else None
+            except ValueError as e:
+                print(f"Warning: Error parsing BatteryDate: {e}")
+                battery_date = None
+
+            try:
+                network_date = datetime.strptime(subscriber_data.get('NetworkDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('NetworkDate') else None
+            except ValueError as e:
+                print(f"Warning: Error parsing NetworkDate: {e}")
+                network_date = None
+
+            try:
+                home_network_date = datetime.strptime(subscriber_data.get('HomeNetworkIdentityDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('HomeNetworkIdentityDate') else None
+            except ValueError as e:
+                print(f"Warning: Error parsing HomeNetworkIdentityDate: {e}")
+                home_network_date = None
+
+            # Define SQL query
+            sql = """
+            INSERT INTO [dbo].[drivers_gps] (
+                [Msisdn], [SubscriberDataStatus], [GeolocationActivated], [GeolocationDeviceStatus],
+                [SubscriberDataDate], [GeolocationLatitude], [GeolocationLongitude], [GeolocationAccuracy],
+                [GeolocationAddress], [GeolocationSpeed], [BatteryLevel], [BatteryDate],
+                [SignalStrength], [NetworkType], [NetworkDate], [MobileCountryCode],
+                [MobileNetworkCode], [HomeNetworkIdentityDate], [DeviceType]
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
+
+            # Prepare parameters
+            params = [
+                location_data.get('Msisdn'),
+                location_data.get('SubscriberDataStatus'),
+                1 if location_data.get('GeolocationActivated') else 0,
+                1 if location_data.get('GeolocationDeviceStatus') else 0,
+                subscriber_date,
+                subscriber_data.get('GeolocationLatitude'),
+                subscriber_data.get('GeolocationLongitude'),
+                subscriber_data.get('GeolocationAccuracy'),
+                subscriber_data.get('GeolocationAddress'),
+                subscriber_data.get('GeolocationSpeed'),
+                subscriber_data.get('BatteryLevel'),
+                battery_date,
+                subscriber_data.get('SignalStrength'),
+                subscriber_data.get('NetworkType'),
+                network_date,
+                subscriber_data.get('MobileCountryCode'),
+                subscriber_data.get('MobileNetworkCode'),
+                home_network_date,
+                subscriber_data.get('DeviceType')
+            ]
+
+            # Execute query
             cursor.execute(sql, params)
             conn.commit()
+            print("✓ Successfully inserted data into drivers_gps table")
             return True
             
         except Exception as e:
