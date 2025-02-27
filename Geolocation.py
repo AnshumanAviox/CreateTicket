@@ -88,7 +88,7 @@ def get_geo_locations(access_token, group_id):
         return None
 
 def insert_location_data(location_data):
-    """Insert geolocation data into the database."""
+    """Insert geolocation data into the drivers_gps table."""
     try:
         # Create connection string
         conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={DB_SERVER},{DB_PORT};DATABASE={DB_NAME};UID={DB_USER};PWD={DB_PASSWORD}"
@@ -108,9 +108,9 @@ def insert_location_data(location_data):
         network_date = datetime.strptime(subscriber_data.get('NetworkDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('NetworkDate') else None
         home_network_date = datetime.strptime(subscriber_data.get('HomeNetworkIdentityDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('HomeNetworkIdentityDate') else None
         
-        # Prepare SQL query
+        # Prepare SQL query for drivers_gps table
         sql = """
-        INSERT INTO [dbo].[GEOLOCATION_DATA] (
+        INSERT INTO [dbo].[drivers_gps] (
             [Msisdn], [SubscriberDataStatus], [GeolocationActivated], [GeolocationDeviceStatus],
             [SubscriberDataDate], [GeolocationLatitude], [GeolocationLongitude], [GeolocationAccuracy],
             [GeolocationAddress], [GeolocationSpeed], [BatteryLevel], [BatteryDate],
@@ -145,7 +145,7 @@ def insert_location_data(location_data):
         # Execute query
         cursor.execute(sql, params)
         conn.commit()
-        print("✓ Successfully inserted data into database")
+        print("✓ Successfully inserted data into drivers_gps table")
         
     except Exception as e:
         print(f"✗ Database error: {str(e)}")
