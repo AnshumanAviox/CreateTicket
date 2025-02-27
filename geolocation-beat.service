@@ -1,0 +1,16 @@
+[Unit]
+Description=Celery Beat for Geolocation Service
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/CreateTicket/CreateTicket
+Environment="PATH=/home/ubuntu/CreateTicket/env/bin"
+ExecStart=/home/ubuntu/CreateTicket/env/bin/celery -A app.celery_worker beat --loglevel=info
+StandardOutput=append:/var/log/celery_beat.log
+StandardError=append:/var/log/celery_beat_error.log
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 
