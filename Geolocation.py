@@ -208,20 +208,20 @@ def main():
     
     # Print the data in formatted JSON
     print("\n=== Retrieved Data ===")
-    print(f"Number of records: {len(location_data)}")
+    print(f"Number of records: {len(location_data.get('results', []))}")
     print("\nData in JSON format:")
     print(json.dumps(location_data, indent=2))
     
     # Insert data into database
     try:
-        # Check if location_data is a list
-        if isinstance(location_data, list):
-            for record in location_data:
+        # Extract the results array from the response
+        records = location_data.get('results', [])
+        if records:
+            for record in records:
                 insert_location_data(record)
+            print("✓ All records successfully inserted into database")
         else:
-            # If it's a single record
-            insert_location_data(location_data)
-        print("✓ All records successfully inserted into database")
+            print("No records found to insert")
     except Exception as e:
         print(f"✗ Failed to insert some records: {str(e)}")
 
