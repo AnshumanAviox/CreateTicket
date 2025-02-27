@@ -2,7 +2,12 @@ import json
 import requests
 import pyodbc
 from datetime import datetime
+from urllib3.exceptions import InsecureRequestWarning
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from .config import settings
+
+# Suppress only the single warning from urllib3 needed.
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class GeolocationService:
     @staticmethod
@@ -24,7 +29,17 @@ class GeolocationService:
             
             print("Payload:", {k: v for k, v in payload.items() if k != 'password'})  # Debug log
             
-            response = requests.post(url, json=payload, verify=False)
+            # Add SSL verification options and timeout
+            response = requests.post(
+                url, 
+                json=payload, 
+                verify=False,
+                timeout=30,
+                headers={
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            )
             print(f"Response status: {response.status_code}")  # Debug log
             
             if response.status_code == 200:
@@ -32,6 +47,12 @@ class GeolocationService:
                 print("Token obtained successfully")  # Debug log
                 return token
             print(f"Failed to get token. Response: {response.text}")  # Debug log
+            return None
+        except requests.exceptions.SSLError as e:
+            print(f"SSL Error during token retrieval: {str(e)}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request Error during token retrieval: {str(e)}")
             return None
         except Exception as e:
             print(f"Token retrieval error: {str(e)}")
@@ -46,13 +67,27 @@ class GeolocationService:
             
             headers = {
                 "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             }
             
-            response = requests.get(url, headers=headers)
+            # Add SSL verification options and timeout
+            response = requests.get(
+                url, 
+                headers=headers, 
+                verify=False,
+                timeout=30
+            )
             
             if response.status_code == 200:
                 return response.json()
+            print(f"Failed to get locations. Status: {response.status_code}, Response: {response.text}")
+            return None
+        except requests.exceptions.SSLError as e:
+            print(f"SSL Error during geo location retrieval: {str(e)}")
+            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request Error during geo location retrieval: {str(e)}")
             return None
         except Exception as e:
             print(f"Geo location retrieval error: {str(e)}")
