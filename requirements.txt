@@ -1,5 +1,5 @@
 annotated-types==0.7.0
-anyio==4.8.0
+anyio
 certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
@@ -16,7 +16,7 @@ starlette==0.45.3
 typing_extensions==4.12.2
 urllib3==2.3.0
 uvicorn==0.24.0
-pyodbc==4.0.39
-celery==5.3.4
-redis==5.0.1
+pyodbc
+celery
+redis
 python-dotenv==1.0.0
