@@ -57,20 +57,96 @@ def get_access_token():
         print(f"✗ Exception during token retrieval: {str(e)}")
         return None
 
-def process_action(access_token, msisdn, process_id, action, comment=None):
-    """
-    Perform an action (submit/cancel/complete) on a process.
-    
-    Args:
-        access_token (str): The OAuth access token
-        msisdn (str): The recipient's phone number
-        process_id (str): The ID of the process to act upon
-        action (str): The action to perform ('submit', 'cancel', or 'complete')
-        comment (str, optional): Optional comment for the action
-    """
+def get_template_content(access_token, template_id):
+    """Fetch template content by template_id"""
     try:
-        url = f"{API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+        url = f"{API_BASE_URL}/api/v1/processtemplate/{template_id}"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(url, headers=headers, verify=False)
+        if response.status_code == 200:
+            # Extract the JsonContent from the response
+            template_data = response.json()
+            if 'results' in template_data and 'JsonContent' in template_data['results']:
+                # Return the parsed JsonContent
+                return json.loads(template_data['results']['JsonContent'])
+        print(f"✗ Failed to get template content: {response.text}")
+        return None
+    except Exception as e:
+        print(f"✗ Exception getting template content: {str(e)}")
+        return None
+
+def create_tagged_process(access_token):
+    """Create a new process with tags."""
+    try:
+        url = f"{API_BASE_URL}/api/v1/subscriber/{MSISDN}/process"
+        print("\n=== Creating Tagged Process ===")
+        print(f"URL: {url}")
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Simplified payload with string values and Timezone
+        payload = {
+            "Template": json.dumps({
+                "Id": TEMPLATE_ID,
+                "Label": "Test Process",
+                "Version": 82
+            }),
+            "Metadata": {
+                "Label": "Test Process",
+                "Priority": 2,
+                "TemplateId": TEMPLATE_ID,
+                "TemplateLabel": "Test Process",
+                "TemplateVersion": 82,
+                "Recipients": [{"Msisdn": MSISDN}],
+                "ProcessTags": ["process"],
+                "Timezone": "America/Chicago"  # Added Timezone parameter
+            },
+            "UseRawValues": True,
+            "Values": json.dumps({
+                "67b00a8a-a8a8-4b6d-b471-d3f7f8a0467a": MSISDN
+            })
+        }
+        
+        print("\nCreate Process Payload:")
+        print(json.dumps(payload, indent=2))
+        
+        response = requests.post(url, json=payload, headers=headers, verify=False)
+        
+        print(f"\nCreate Process Response Status Code: {response.status_code}")
+        print(f"Create Process Response Body: {response.text}")
+        
+        if response.status_code in [200, 201, 202]:
+            response_data = response.json()
+            new_process_id = response_data.get('results', {}).get('ProcessId')
+            if new_process_id:
+                print(f"✓ Successfully created process: {new_process_id}")
+                return new_process_id
+            else:
+                print("✗ Process ID not found in response")
+                return None
+        
+        error_msg = response.json().get('message', 'Unknown error')
+        print(f"✗ Failed to create process: {error_msg}")
+        return None
+        
+    except Exception as e:
+        print(f"✗ Exception during process creation: {str(e)}")
+        return None
+
+def process_action(access_token, msisdn, process_id, action, comment=None):
+    """Perform an action (submit/cancel/complete) on a process."""
+    try:
+        # URL with correct filter parameter (note the proper encoding of 'fi' character)
+        url = f"{API_BASE_URL}/api/v1/subscriber/self/process/{process_id}"
         url += "?filter=processOwnerRequestAndSubmit"
+        
         print(f"\n=== Performing Process {action.title()} ===")
         print(f"URL: {url}")
         
@@ -79,42 +155,42 @@ def process_action(access_token, msisdn, process_id, action, comment=None):
             "Content-Type": "application/json"
         }
         
-        # Simplified payload matching documentation example
+        # Payload exactly matching the API documentation
         payload = {
             "Action": action,
             "Metadata": {
                 "Label": "process",
+                "TemplateId": TEMPLATE_ID,
                 "Recipients": [
                     {"Msisdn": msisdn}
-                ],
-                "TemplateId": TEMPLATE_ID
+                ]
             },
             "UseRawValues": True,
             "Values": "{\"67b00a8a-a8a8-4b6d-b471-d3f7f8a0467a\":\"" + msisdn + "\"}"
         }
         
+        # Optional comment if provided
         if comment:
             payload["Comment"] = comment
             
         print("\nRequest Payload:")
         print(json.dumps(payload, indent=2))
         
-        # Make the request
-        response = requests.put(url, json=payload, headers=headers)
+        response = requests.put(url, json=payload, headers=headers, verify=False)
         print(f"\nResponse Status Code: {response.status_code}")
+        print(f"Response Body: {response.text}")
         
         if response.status_code in [200, 201, 202]:
             print(f"✓ Successfully performed {action} action on process")
-            print("\nResponse Data:")
-            print(json.dumps(response.json(), indent=2))
-            return response.json()
-        else:
-            print(f"✗ Failed to {action} process. Response: {response.text}")
-            return None
+            return True
+            
+        error_msg = response.json().get('message', 'Unknown error')
+        print(f"✗ Failed to {action} process: {error_msg}")
+        return False
             
     except Exception as e:
         print(f"✗ Exception during process {action}: {str(e)}")
-        return None
+        return False
 
 def main():
     """Main execution function."""
@@ -125,6 +201,12 @@ def main():
     if not access_token:
         print("✗ Failed to obtain access token. Exiting.")
         return
+    
+    # Create a new tagged process
+    process_id = create_tagged_process(access_token)
+    if not process_id:
+        print("✗ Failed to create tagged process. Exiting.")
+        return
         
     # Test process actions
     actions = ['submit', 'cancel', 'complete']
@@ -133,7 +215,7 @@ def main():
         result = process_action(
             access_token=access_token,
             msisdn=MSISDN,
-            process_id=PROCESS_ID,
+            process_id=process_id,  # Use the newly created process ID
             action=action,
             comment=f"Test {action} action from API"
         )
