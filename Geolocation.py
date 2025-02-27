@@ -90,6 +90,10 @@ def get_geo_locations(access_token, group_id):
 def insert_location_data(location_data):
     """Insert geolocation data into the drivers_gps table."""
     try:
+        # Debug print to see the data structure
+        print("\nDebug - Location Data:")
+        print(json.dumps(location_data, indent=2))
+        
         # Create connection string
         conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={DB_SERVER},{DB_PORT};DATABASE={DB_NAME};UID={DB_USER};PWD={DB_PASSWORD}"
         
@@ -99,14 +103,42 @@ def insert_location_data(location_data):
         conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
         
+        # Ensure location_data is a dictionary
+        if isinstance(location_data, str):
+            location_data = json.loads(location_data)
+        
         # Parse the subscriber data
         subscriber_data = location_data.get('SubscriberData', {})
+        if isinstance(subscriber_data, str):
+            subscriber_data = json.loads(subscriber_data)
+            
+        print("\nDebug - Subscriber Data:")
+        print(json.dumps(subscriber_data, indent=2))
         
         # Convert string dates to datetime objects
-        subscriber_date = datetime.strptime(location_data['SubscriberDataDate'], '%Y%m%dT%H:%M:%S')
-        battery_date = datetime.strptime(subscriber_data.get('BatteryDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('BatteryDate') else None
-        network_date = datetime.strptime(subscriber_data.get('NetworkDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('NetworkDate') else None
-        home_network_date = datetime.strptime(subscriber_data.get('HomeNetworkIdentityDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('HomeNetworkIdentityDate') else None
+        try:
+            subscriber_date = datetime.strptime(location_data['SubscriberDataDate'], '%Y%m%dT%H:%M:%S')
+        except (KeyError, ValueError) as e:
+            print(f"Warning: Error parsing SubscriberDataDate: {e}")
+            subscriber_date = None
+            
+        try:
+            battery_date = datetime.strptime(subscriber_data.get('BatteryDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('BatteryDate') else None
+        except ValueError as e:
+            print(f"Warning: Error parsing BatteryDate: {e}")
+            battery_date = None
+            
+        try:
+            network_date = datetime.strptime(subscriber_data.get('NetworkDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('NetworkDate') else None
+        except ValueError as e:
+            print(f"Warning: Error parsing NetworkDate: {e}")
+            network_date = None
+            
+        try:
+            home_network_date = datetime.strptime(subscriber_data.get('HomeNetworkIdentityDate', ''), '%Y%m%dT%H:%M:%S') if subscriber_data.get('HomeNetworkIdentityDate') else None
+        except ValueError as e:
+            print(f"Warning: Error parsing HomeNetworkIdentityDate: {e}")
+            home_network_date = None
         
         # Prepare SQL query for drivers_gps table
         sql = """
@@ -119,12 +151,12 @@ def insert_location_data(location_data):
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
-        # Prepare parameters
+        # Prepare parameters with safe get operations
         params = [
-            location_data['Msisdn'],
-            location_data['SubscriberDataStatus'],
-            1 if location_data['GeolocationActivated'] else 0,
-            1 if location_data['GeolocationDeviceStatus'] else 0,
+            location_data.get('Msisdn'),
+            location_data.get('SubscriberDataStatus'),
+            1 if location_data.get('GeolocationActivated') else 0,
+            1 if location_data.get('GeolocationDeviceStatus') else 0,
             subscriber_date,
             subscriber_data.get('GeolocationLatitude'),
             subscriber_data.get('GeolocationLongitude'),
@@ -142,6 +174,9 @@ def insert_location_data(location_data):
             subscriber_data.get('DeviceType')
         ]
         
+        print("\nDebug - SQL Parameters:")
+        print(params)
+        
         # Execute query
         cursor.execute(sql, params)
         conn.commit()
@@ -149,6 +184,7 @@ def insert_location_data(location_data):
         
     except Exception as e:
         print(f"✗ Database error: {str(e)}")
+        print(f"Error type: {type(e)}")
         raise
     finally:
         cursor.close()
@@ -178,8 +214,13 @@ def main():
     
     # Insert data into database
     try:
-        for record in location_data:
-            insert_location_data(record)
+        # Check if location_data is a list
+        if isinstance(location_data, list):
+            for record in location_data:
+                insert_location_data(record)
+        else:
+            # If it's a single record
+            insert_location_data(location_data)
         print("✓ All records successfully inserted into database")
     except Exception as e:
         print(f"✗ Failed to insert some records: {str(e)}")
