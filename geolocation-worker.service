@@ -1,6 +1,6 @@
 [Unit]
 Description=Celery Worker for Geolocation Service
-After=network.target
+After=network.target redis-server.service
 
 [Service]
 Type=simple
@@ -10,6 +10,7 @@ WorkingDirectory=/home/ubuntu/CreateTicket/CreateTicket
 Environment="PATH=/home/ubuntu/CreateTicket/env/bin"
 Environment="PYTHONPATH=/home/ubuntu/CreateTicket/CreateTicket"
 Environment="PYTHONUNBUFFERED=1"
+Environment="C_FORCE_ROOT=false"
 ExecStart=/home/ubuntu/CreateTicket/env/bin/celery -A app.celery_worker worker --loglevel=debug
 StandardOutput=append:/var/log/celery_worker.log
 StandardError=append:/var/log/celery_worker_error.log

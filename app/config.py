@@ -18,7 +18,13 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "h77pc0l0"
     DB_PORT: str = "1433"
 
+    # Add these new fields that are causing the error
+    msisdn: str | None = None
+    database_url: str | None = None
+
     class Config:
         env_file = ".env"
+        # Allow extra fields to be ignored
+        extra = "ignore"
 
 settings = Settings() 

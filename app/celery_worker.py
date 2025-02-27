@@ -1,9 +1,11 @@
 from celery import Celery
-from .geolocation import GeolocationService
-from .config import settings
+from app.geolocation import GeolocationService
+from app.config import settings
 
-# Initialize celery app
-celery = Celery('geolocation_tasks')
+# Initialize celery app with full import path
+celery = Celery('geolocation_tasks', 
+                broker='redis://localhost:6379/0',
+                backend='redis://localhost:6379/0')
 
 # Load celery config
 celery.config_from_object('celeryconfig')
