@@ -133,6 +133,7 @@ def populate_values_and_update_template_by_name(
             elif field_name in ["Pickup Time"] and field_type == "text":
                 field_uuid = field["uuid"]
                 field_value = ticket_data.get('Pickup_Date', '')
+                print(field_value,"-------------------------------------------")
                 values[field_uuid] = field_value
                 field["defaultValue"] = field_value
                 field["unsupportedTypeValue"] = field_value
