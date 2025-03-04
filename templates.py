@@ -133,10 +133,22 @@ def populate_values_and_update_template_by_name(
             elif field_name in ["Pickup Time"] and field_type == "text":
                 field_uuid = field["uuid"]
                 field_date = ticket_data.get('Pickup_Date', '')
-                print(field_date,"-------------------------------------------")
-                values[field_uuid] = "21-12-1997"
-                field["defaultValue"] = "21-12-1997"
-                field["unsupportedTypeValue"] = "21-12-1997"
+                
+                try:
+                    # Parse the datetime string
+                    dt = datetime.strptime(str(field_date), "%Y-%m-%d %H:%M:%S")
+                    # Format it as "MM/DD/YYYY HH:MM AM/PM"
+                    formatted_date = dt.strftime("%m/%d/%Y %I:%M %p")
+                    
+                    values[field_uuid] = formatted_date
+                    field["defaultValue"] = formatted_date
+                    field["unsupportedTypeValue"] = formatted_date
+                except Exception as e:
+                    print(f"Error formatting date: {e}")
+                    values[field_uuid] = ""
+                    field["defaultValue"] = ""
+                    field["unsupportedTypeValue"] = ""
+
             # Handle Pickup Time field
             # elif field_name in ["Pickup Time"] and field_type == "date":
             #     field_uuid = field.get("uuid")
