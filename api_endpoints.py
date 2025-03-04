@@ -98,60 +98,6 @@ async def create_process(
     print(payload,"========================== This is Payload =====================================")
     return await create_process_request(access_token, request.msisdn, payload)
 
-# @router.post("/process/create-with-data")
-# async def create_process_with_data(
-#     process_data: ProcessRequest,
-#     access_token: str = Depends(get_access_token)
-# ):
-#     """Create process with provided data"""
-#     template_content = await get_template_content(
-#         access_token, 
-#         process_data.template_id
-#     )
-#     values = populate_values_and_update_template_by_name(
-#         template_content,
-#         pickup_time=process_data.pickup_time,
-#         drop_time=process_data.drop_time,
-#         trip_start_time=process_data.trip_start_time,
-#         trip_end_time=process_data.trip_end_time,
-#         trip_start_address=process_data.trip_start_address,
-#         trip_end_address=process_data.trip_end_address,
-#         trip_start_latitude=process_data.trip_start_latitude,
-#         trip_start_longitude=process_data.trip_start_longitude,
-#         trip_end_latitude=process_data.trip_end_latitude,
-#         trip_end_longitude=process_data.trip_end_longitude,
-#         wait_start_time=process_data.wait_start_time,
-#         wait_end_time=process_data.wait_end_time,
-#         wait_start_address=process_data.wait_start_address,
-#         wait_end_address=process_data.wait_end_address,
-#         wait_start_latitude=process_data.wait_start_latitude,
-#         wait_start_longitude=process_data.wait_start_longitude,
-#         wait_end_latitude=process_data.wait_end_latitude,
-#         wait_end_longitude=process_data.wait_end_longitude
-#     )
-    
-#     metadata = {
-#         "Label": f"Ticket {process_data.ticket_id}",
-#         "Priority": 2,
-#         "TemplateId": process_data.template_id,
-#         "TemplateLabel": "Test Process",
-#         "TemplateVersion": 34,
-#         "Recipients": [{"Msisdn": settings.MSISDN}],
-#         "Timezone": "America/Chicago"
-#     }
-    
-#     payload = {
-#         "Template": json.dumps(template_content),
-#         "Metadata": metadata,
-#         "Values": json.dumps(values),
-#         "UseRawValues": True
-#     }
-    
-#     return await create_process_request(
-#         access_token, 
-#         settings.MSISDN, 
-#         payload
-#     )
 
 async def create_process_request(access_token: str, msisdn: str, payload: dict):
     """Send process creation request"""
@@ -313,22 +259,79 @@ async def process_owner_request_submit(
             detail=f"Error during process {action}: {str(e)}"
         )
 
-@router.put("/api/v1/subscriber/{msisdn}/process/{process_id}")
-async def process_owner_request_and_submit(
+# @router.put("/api/v1/subscriber/{msisdn}/process/{process_id}")
+# async def process_owner_request_and_submit(
+#     msisdn: str,
+#     process_id: str,
+#     action: ProcessAction = Query(..., description="Action to perform (submit/cancel/complete)"),
+#     access_token: str = Depends(get_access_token),
+#     comment: Optional[str] = Query(None, description="Optional comment for the action")
+# ):
+#     """
+#     Submit/cancel/complete a process without explicitly requesting ownership.
+#     Uses the processOwnerRequestAndSubmit filter.
+#     """
+#     return await process_owner_request_submit(
+#         access_token=access_token,
+#         msisdn=msisdn,
+#         process_id=process_id,
+#         action=action.value,
+#         comment=comment
+#     )
+
+@router.post("/subscriber/{msisdn}/process/{process_id}/own")
+async def request_process_ownership(
     msisdn: str,
     process_id: str,
-    action: ProcessAction = Query(..., description="Action to perform (submit/cancel/complete)"),
-    access_token: str = Depends(get_access_token),
-    comment: Optional[str] = Query(None, description="Optional comment for the action")
+    access_token: str = Depends(get_access_token)
 ):
-    """
-    Submit/cancel/complete a process without explicitly requesting ownership.
-    Uses the processOwnerRequestAndSubmit filter.
-    """
-    return await process_owner_request_submit(
-        access_token=access_token,
-        msisdn=msisdn,
-        process_id=process_id,
-        action=action.value,
-        comment=comment
+    """Request ownership of a process"""
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    process_url = (
+        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}/own"
+        "?Action=request"
     )
+    
+    payload = {
+        "Action": "request",
+        "Metadata": {
+            "Label": f"Process {process_id}",
+            "Priority": 2,
+            "Recipients": [{"Msisdn": msisdn}],
+            "Timezone": "America/Chicago"
+        }
+    }
+    
+    try:
+        print(f"Making ownership request to: {process_url}")
+        print(f"With payload: {payload}")
+        
+        response = requests.post(process_url, json=payload, headers=headers)
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
+        
+        if response.status_code in [200, 201, 202]:
+            response_data = response.json()
+            return {
+                "status": "success",
+                "process": {
+                    "process_id": process_id,
+                    "msisdn": msisdn,
+                    "action": "request_ownership"
+                },
+                "api_response": response_data
+            }
+            
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Failed to request process ownership: {response.text}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error during ownership request: {str(e)}"
+        )
