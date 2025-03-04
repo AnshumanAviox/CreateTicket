@@ -73,7 +73,7 @@ def populate_values_and_update_template_by_name(
     template: Dict,
     ticket_data:Dict,
     customer_name: Optional[str] = None,
-    pickup_time: Optional[datetime] = None,
+    pickup_time: Optional[str] = None,
     drop_time: Optional[datetime] = None,
     trip_start_time: Optional[datetime] = None,
     trip_end_time: Optional[datetime] = None,
@@ -132,11 +132,11 @@ def populate_values_and_update_template_by_name(
 
             elif field_name in ["Pickup Time"] and field_type == "text":
                 field_uuid = field["uuid"]
-                field_value = ticket_data.get('Pickup_Date', '')
-                print(field_value,"-------------------------------------------")
-                values[field_uuid] = field_value
-                field["defaultValue"] = field_value
-                field["unsupportedTypeValue"] = field_value
+                field_date = ticket_data.get('Pickup_Date', '')
+                print(field_date,"-------------------------------------------")
+                values[field_uuid] = "21-12-1997"
+                field["defaultValue"] = "21-12-1997"
+                field["unsupportedTypeValue"] = "21-12-1997"
             # Handle Pickup Time field
             # elif field_name in ["Pickup Time"] and field_type == "date":
             #     field_uuid = field.get("uuid")
