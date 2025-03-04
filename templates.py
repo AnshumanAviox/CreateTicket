@@ -130,29 +130,35 @@ def populate_values_and_update_template_by_name(
                 # field["defaultValue"] = "New John"
                 # field["unsupportedTypeValue"] = "New John"
 
+            elif field_name in ["Pickup Time"] and field_type == "text":
+                field_uuid = field["uuid"]
+                field_value = ticket_data.get('Pickup_Date', '')
+                values[field_uuid] = field_value
+                field["defaultValue"] = field_value
+                field["unsupportedTypeValue"] = field_value
             # Handle Pickup Time field
-            elif field_name in ["Pickup Time"] and field_type == "date":
-                field_uuid = field.get("uuid")
-                print("2024-09-07T11:16:35","-0-------------------")
-                print(ticket_data.get('Pickup_Date'),"=======================================")
-                if pickup_time:
-                    formatted_time = {
-                        "date": "02/04/2025",
-                        "time": "10:45 AM",
-                        "tzd": "UTC"
-                    }
-                    values[field_uuid] = formatted_time
-                    field_value = ticket_data.get('Pickup_Date', '')
-                    field["value"] = field_value
-                    field["defaultValue"] = field_value
-                    field["unsupportedTypeValue"] = field_value
-                    field["hasValue"] = True
-                else:
-                    empty_time = {"date": "", "time": "", "tzd": ""}
-                    field["value"] = empty_time
-                    field["defaultValue"] = empty_time
-                    field["unsupportedTypeValue"] = empty_time
-                    field["hasValue"] = False
+            # elif field_name in ["Pickup Time"] and field_type == "date":
+            #     field_uuid = field.get("uuid")
+            #     print("2024-09-07T11:16:35","-0-------------------")
+            #     print(ticket_data.get('Pickup_Date'),"=======================================")
+            #     if pickup_time:
+            #         formatted_time = {
+            #             "date": "02/04/2025",
+            #             "time": "10:45 AM",
+            #             "tzd": "UTC"
+            #         }
+            #         values[field_uuid] = formatted_time
+            #         field_value = ticket_data.get('Pickup_Date', '')
+            #         field["value"] = field_value
+            #         field["defaultValue"] = field_value
+            #         field["unsupportedTypeValue"] = field_value
+            #         field["hasValue"] = True
+            #     else:
+            #         empty_time = {"date": "", "time": "", "tzd": ""}
+            #         field["value"] = empty_time
+            #         field["defaultValue"] = empty_time
+            #         field["unsupportedTypeValue"] = empty_time
+            #         field["hasValue"] = False
                 # pickup_date = ticket_data.get('Pickup_Date', '')
                 
                 # if pickup_date:
