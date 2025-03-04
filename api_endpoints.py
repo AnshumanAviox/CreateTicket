@@ -22,7 +22,7 @@ class ProcessAction(Enum):
     CANCEL = "cancel"
     COMPLETE = "complete"
 
-@router.get("/template/{template_id}", response_model=ProcessTemplateResponse)
+@router.get("ProcessTemplateResponse")
 async def get_template(
     template_id: str,
     access_token: str = Depends(get_access_token)
@@ -31,7 +31,7 @@ async def get_template(
     template = await get_template_content(access_token, template_id)
     return {"template": template}
 
-@router.get("/get-token")
+@router.get("Token Get")
 async def get_token():
     """Get access token for testing"""
     try:
@@ -49,7 +49,7 @@ async def get_token():
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/refresh-token")
+@router.post("Refresh Token")
 async def refresh_token():
     """Force refresh the access token"""
     clear_token_cache()
@@ -65,7 +65,7 @@ async def refresh_token():
         "expires_at": token_expiry
     }
 
-@router.post("/process/create")
+@router.post("Create Process Ticket")
 async def create_process(
     request: CreateProcessRequest,
     access_token: str = Depends(get_access_token)
@@ -197,67 +197,67 @@ async def get_ticket_data(ticket_id: str) -> Dict[str, Any]:
         cursor.close()
         conn.close()
 
-async def process_owner_request_submit(
-    access_token: str, 
-    msisdn: str, 
-    process_id: str, 
-    action: str, 
-    comment: Optional[str] = None
-):
-    """Send process owner request and submit"""
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
+# async def process_owner_request_submit(
+#     access_token: str, 
+#     msisdn: str, 
+#     process_id: str, 
+#     action: str, 
+#     comment: Optional[str] = None
+# ):
+#     """Send process owner request and submit"""
+#     headers = {
+#         "Authorization": f"Bearer {access_token}",
+#         "Content-Type": "application/json"
+#     }
     
-    process_url = (
-        f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
-        "?filter=processOwnerRequestAndSubmit"
-    )
+#     process_url = (
+#         f"{settings.API_BASE_URL}/api/v1/subscriber/{msisdn}/process/{process_id}"
+#         "?filter=processOwnerRequestAndSubmit"
+#     )
     
-    # Submit with minimal required metadata
-    payload = {
-        "Action": action,
-        "Metadata": {
-            "Label": f"Process {process_id}",
-            "Priority": 2,
-            "Recipients": [{"Msisdn": msisdn}],
-            "Timezone": "America/Chicago"
-        }
-    }
+#     # Submit with minimal required metadata
+#     payload = {
+#         "Action": action,
+#         "Metadata": {
+#             "Label": f"Process {process_id}",
+#             "Priority": 2,
+#             "Recipients": [{"Msisdn": msisdn}],
+#             "Timezone": "America/Chicago"
+#         }
+#     }
     
-    if comment:
-        payload["Comment"] = comment
+#     if comment:
+#         payload["Comment"] = comment
     
-    try:
-        print(f"Making request to: {process_url}")
-        print(f"With payload: {payload}")
+#     try:
+#         print(f"Making request to: {process_url}")
+#         print(f"With payload: {payload}")
         
-        response = requests.put(process_url, json=payload, headers=headers)
-        print(f"Response status: {response.status_code}")
-        print(f"Response body: {response.text}")
+#         response = requests.put(process_url, json=payload, headers=headers)
+#         print(f"Response status: {response.status_code}")
+#         print(f"Response body: {response.text}")
         
-        if response.status_code in [200, 201, 202]:
-            response_data = response.json()
-            return {
-                "status": "success",
-                "process": {
-                    "process_id": process_id,
-                    "msisdn": msisdn,
-                    "action": action
-                },
-                "api_response": response_data
-            }
+#         if response.status_code in [200, 201, 202]:
+#             response_data = response.json()
+#             return {
+#                 "status": "success",
+#                 "process": {
+#                     "process_id": process_id,
+#                     "msisdn": msisdn,
+#                     "action": action
+#                 },
+#                 "api_response": response_data
+#             }
             
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=f"Failed to {action} process: {response.text}"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error during process {action}: {str(e)}"
-        )
+#         raise HTTPException(
+#             status_code=response.status_code,
+#             detail=f"Failed to {action} process: {response.text}"
+#         )
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Error during process {action}: {str(e)}"
+#         )
 
 # @router.put("/api/v1/subscriber/{msisdn}/process/{process_id}")
 # async def process_owner_request_and_submit(
@@ -279,7 +279,7 @@ async def process_owner_request_submit(
 #         comment=comment
 #     )
 
-@router.post("/subscriber/{msisdn}/process/{process_id}/own")
+@router.post("ProcessOwnerRequest")
 async def request_process_ownership(
     msisdn: str,
     process_id: str,
