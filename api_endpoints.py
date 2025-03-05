@@ -73,11 +73,10 @@ async def create_process(
     """Create empty process from template"""
     # First fetch and print the ticket data
     ticket_data = await get_ticket_data(request.ticket_id)
-    # print(ticket_data,"==============================")
+    
     # Continue with existing template creation logic
     template_content = await get_template_content(access_token, request.template_id)
     values = populate_values_and_update_template_by_name(template_content, ticket_data)
-    # print(values,"00000000000000000000000000000000000")
     
     metadata = {
         "Label": f"Ticket {request.ticket_id}",
@@ -95,8 +94,26 @@ async def create_process(
         "Values": json.dumps(values),
         "UseRawValues": True
     }
-    print(payload,"========================== This is Payload =====================================")
-    return await create_process_request(access_token, request.msisdn, payload)
+    
+    # Create the process
+    response = await create_process_request(access_token, request.msisdn, payload)
+    
+    if response and response.get('status') == 'success':
+        # Extract process_id from response
+        process_id = response['process']['process_id']
+        ticket_id = response['process']['ticket_id']
+        
+        # Start the Celery task for monitoring this process
+        from subscriber_process import fetch_process_values
+        fetch_process_values.delay(process_id, ticket_id, access_token)
+        
+        # Add task info to response
+        response['monitoring'] = {
+            'status': 'started',
+            'message': 'Process monitoring initiated'
+        }
+    
+    return response
 
 
 async def create_process_request(access_token: str, msisdn: str, payload: dict):

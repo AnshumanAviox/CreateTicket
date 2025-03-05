@@ -1,17 +1,42 @@
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from datetime import datetime
+from pydantic_settings import BaseSettings
 
 
-class Settings:
-    API_BASE_URL = "https://swapi.teamontherun.com"
-    CLIENT_ID = "31343_43lzb3vngtmokww8wcws48w4oss044s044o4gkcocks4s0k44c"
-    CLIENT_SECRET = "64po82nnwssosgo80wo88osok4so8kc4s8cgowkcsgc80wcoss"
-    USERNAME = "bradleycooper888@gmail.com"
-    PASSWORD = "Not4afish1234!"
-    TOKEN_TYPE = "sw_organization_all_data"
-    SCOPE = "processes provisioning"
-    MSISDN = "13142014658"
+class Settings(BaseSettings):
+    # API Configuration
+    API_BASE_URL: str
+    CLIENT_ID: str
+    CLIENT_SECRET: str
+    USERNAME: str
+    PASSWORD: str
+    TOKEN_TYPE: str
+    SCOPE: str
+    GROUP_ID: str
+
+    # Database Configuration
+    DB_SERVER: str
+    DB_NAME: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_PORT: str
+
+    # Redis Configuration
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: str = "6379"
+    REDIS_DB: str = "0"
+
+    class Config:
+        env_file = ".env"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"mssql+pyodbc://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_SERVER}:{self.DB_PORT}/{self.DB_NAME}?driver=ODBC+Driver+17+for+SQL+Server"
+
+    @property
+    def REDIS_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
 
 class TokenRequest(BaseModel):

@@ -20,7 +20,7 @@ enable_utc = True
 # Schedule settings
 beat_schedule = {
     'fetch-process-values': {
-        'task': 'subscriber_process.fetch_process_values',
+        'task': 'src.subscriber_process.fetch_process_values',
         'schedule': timedelta(seconds=15),
     },
 } 

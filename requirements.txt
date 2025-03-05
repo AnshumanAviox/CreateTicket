@@ -16,7 +16,8 @@ starlette
 typing_extensions==4.12.2
 urllib3==2.3.0
 uvicorn==0.24.0
-pyodbc
-celery
+pyodbc==4.0.39
+celery==5.3.6
 redis>=5.0.1
 python-dotenv==1.0.0
+pydantic-settings==2.1.0
